@@ -19,7 +19,13 @@ st.markdown('**52 Week Low:** ' + str(info['fiftyTwoWeekLow']))
 st.markdown('**1 Year Target Estimate:** ' + str(info['targetMeanPrice']))
 st.markdown('**Dividend:** ' + str(info['dividendRate'])) 
 st.markdown('**Yield:** ' + str(info['dividendYield'] * 100) + '%')
-st.markdown('**Average 30 Day Volume:** ' + str(info['averageVolume30days']))
+
+# Calculate 30 day average volume 
+last_30_days = hist.Close.iloc[-30:]
+avg_30_day_vol = last_30_days.Volume.mean()
+
+# Display 
+st.markdown('**30 Day Average Volume:** ' + str(int(avg_30_day_vol)))
 
 # Fetch historical data
 hist = ticker.history(period="1y") 
