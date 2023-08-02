@@ -7,22 +7,19 @@ import numpy as np
 st.title('Dividend Investing Analysis')
 
 def get_data(tickers, years):
-    data = {}
-    for ticker in tickers:
-        ticker_obj = yf.Ticker(ticker)
-        data[ticker] = ticker_obj
+    data = yf.download(tickers, start=datetime.today() - timedelta(days=365 * years), end=datetime.today())
     return data
 
 def get_metrics(data):
     metrics = {}
     for ticker in data:
-        history = data[ticker].history(period="max")
-        dividends = data[ticker]['Dividends']
+        history = data[ticker]
+        dividends = history['Dividends']
         metrics[ticker] = {
             '52 Week High': history['High'].max(),
             '52 Week Low': history['Low'].min(),
             'Dividend': dividends['Dividends'].max(),
-            'Yield': data[ticker].info['dividendYield'] * 100,
+            'Yield': history['dividendYield'] * 100,
             'Volume': history['Volume'].mean()
         }
     return metrics
@@ -35,8 +32,8 @@ def add_div_analysis(data, metrics, years):
         div_dates = [dividends.index[0] + timedelta(days=x) for x in div_days]
         div_yields = [metrics[ticker]['Yield'] * y / 100 for y in dividends['Dividends']]
 
-        prices = data[ticker].history(div_dates)['Close']
-        highs = data[ticker].history(div_dates)['High']
+        prices = data[ticker]['Close']
+        highs = data[ticker]['High']
 
         perf = {}
         for i, div_date in enumerate(div_dates):
