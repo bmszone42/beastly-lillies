@@ -17,12 +17,15 @@ def get_dividend_data(data):
     for ticker, df in data.items():
         try:
             div_df = df[df['Dividends'] > 0]
-            dividend_data[ticker] = {
-                'dates': list(div_df.index),
-                'amounts': list(div_df['Dividends'])
-            }
+            if not div_df.empty:
+                dividend_data[ticker] = {
+                    'dates': list(div_df.index),
+                    'amounts': list(div_df['Dividends'])
+                }
+            else:
+                st.warning(f"No dividend data found for {ticker}.")
         except:
-            st.error(f"No dividend data found for {ticker}.")
+            st.error(f"Error processing dividend data for {ticker}.")
     return dividend_data
 
 def calculate_target_prices(data, dividend_data):
@@ -65,6 +68,10 @@ def main():
 
         # Get dividend info
         dividend_data = get_dividend_data(data)
+
+        if len(dividend_data) == 0:
+            st.error("No dividend data found for any of the specified stocks.")
+            return
 
         # Calculate target prices
         target_prices = calculate_target_prices(data, dividend_data)
