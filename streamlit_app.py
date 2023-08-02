@@ -1,95 +1,44 @@
-import yfinance as yf
-import pandas as pd
 import streamlit as st
-import matplotlib.pyplot as plt
+import yfinance as yf 
+import pandas as pd
+import plotly.express as px
 
 st.title('Dividend Stock Analysis')
 
-tickers = st.text_input('Enter stock tickers separated by space')
+symbol = st.text_input('Enter a stock symbol', 'MSFT')
+years = st.slider('Select number of years', 1, 10, 5)
 
-if tickers:
+@st.cache
+def get_data(symbol):
+    return yf.download(symbol, period='5y')
 
-  ticker_list = tickers.split()
+df = get_data(symbol)
 
-  # Initialize data structures
-  data = {} 
-  metrics = {}
-  dividend_data = {}
-  
-  for ticker in ticker_list:
+dividends = df[['Dividends']]
+prices = df[['Close']]
 
-    # Get data
-    data[ticker] = yf.download(ticker, period='10y')
+def calc_recovery(divs, prices):
+    results = []
+    for i, row in dividends.iterrows():
+        div_amt = row['Dividends']
+        price = prices.loc[i]['Close']
+        c1 = price + 0.5 * div_amt 
+        c2 = price + 0.75 * div_amt
+        c3 = price + div_amt
+        
+        days = []
+        for c in [c1, c2, c3]:
+            mask = prices > c
+            days.append((mask[mask].index[0] - i).days)
+        results.append({'Date':i.date(), 'DaysToRecover': days})
 
-    # Get metrics
-    ticker_info = yf.Ticker(ticker) 
-    metrics[ticker] = {
-      '52 Week High': ticker_info.info['fiftyTwoWeekHigh'],
-      '52 Week Low': ticker_info.info['fiftyTwoWeekLow'],
-      'Volume': ticker_info.info['averageVolume10days'],
-      'Dividend': ticker_info.info['dividendRate'],
-      'Yield': ticker_info.info['dividendYield']*100,
-      'Price Target': ticker_info.info['targetMeanPrice']
-    }
+    return pd.DataFrame(results)
 
-    # Get dividend data
-    dividend_data[ticker] = yf.Ticker(ticker).dividends
+recovery_data = calc_recovery(dividends, prices)
 
-    # Calculate dividend stats
-    dividend_stats = calc_dividend_stats(dividend_data[ticker])
-    metrics[ticker].update(dividend_stats)
+st.subheader('Dividend Recovery Analysis')
+st.write(recovery_data)
 
-  # Display results  
-  show_data(data, metrics, dividend_data)
-
-def calc_dividend_stats(dividends):
-
-  stats = {}
-
-  for dividend in dividends:
-    ex_date = dividend['exDate']
-    amount = dividend['amount']
-    
-    # Get closing price on ex-date
-    ex_price = get_close_price(ex_date)
-    
-    # Find recovery days
-    days_50 = get_recovery_days(ex_price, amount, 0.5)
-    days_75 = get_recovery_days(ex_price, amount, 0.75)  
-    days_100 = get_recovery_days(ex_price, amount, 1.0)
-    
-    stats['50% Recovery Days'] = days_50 
-    stats['75% Recovery Days'] = days_75
-    stats['100% Recovery Days'] = days_100
-
-  return stats
-
-def show_data(data, metrics, dividends):
-
-  for ticker in data:
-
-    df = data[ticker].reset_index()
-
-    df['Year'] = df['Date'].dt.year
-    df['Month'] = df['Date'].dt.month
-    df['Day'] = df['Date'].dt.day
-
-    pivoted = df.pivot_table(index=['Year', 'Month', 'Day'], values='Close', aggfunc='mean').reset_index()
-
-    st.header(ticker)  
-    st.write(pivoted)
-    st.write(metrics[ticker])
-
-    # Plot close price and dividends  
-    plot_data(df, dividends[ticker])
-
-def plot_data(df, dividends):
-
-  fig, ax = plt.subplots()
-
-  ax.plot(df['Date'], df['Close'])
-
-  for i, div in dividends.iterrows():
-    ax.vlines(div.name, ymin=0, ymax=df['Close'].max(), colors='r')
-
-  st.pyplot(fig)
+st.subheader('Stock Closing Price')
+fig = px.line(prices.reset_index(), x='Date', y='Close')
+st.write(fig)
