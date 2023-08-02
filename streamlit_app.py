@@ -12,7 +12,7 @@ def get_recovery_days(ex_price, amount, target_recovery):
     target_price = ex_price * (1 + target_recovery)
     return (target_price - ex_price) / amount
 
-ddef calc_dividend_stats(dividends, df):
+def calc_dividend_stats(dividends, df):
     stats = {}
     df_dividends = dividends.reset_index()
 
