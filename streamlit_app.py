@@ -6,13 +6,22 @@ import matplotlib.pyplot as plt
 st.title('Dividend Stock Analysis')
 
 def get_close_price(date, df):
-    try:
-        # Find the row corresponding to the given date and get the 'Close' price
-        close_price = df.loc[df['Date'] == date, 'Close'].values[0]
-        return close_price
-    except IndexError:
-        # Handle the case where the date is not found in the DataFrame
-        return None
+    # Check common date column names
+    date_columns = ['Date', 'date', 'DateUTC']  # Add more if needed
+
+    for col in date_columns:
+        if col in df.columns:
+            try:
+                # Find the row corresponding to the given date and get the 'Close' price
+                close_price = df.loc[df[col] == date, 'Close'].values[0]
+                return close_price
+            except IndexError:
+                # Handle the case where the date is not found in the DataFrame
+                return None
+
+    # If no valid date column is found, raise an error
+    raise KeyError(f"No valid date column found in DataFrame: {df.columns}")
+
 
 def get_recovery_days(ex_price, amount, target_recovery):
     target_price = ex_price * (1 + target_recovery)
