@@ -9,10 +9,10 @@ st.title('Dividend Investing Analysis')
 def get_data(tickers, years):
     data = {}
     for ticker in tickers:
-        data[ticker] = yf.Ticker(ticker)
-        history = data[ticker].history(period=f"{years}y")
-        dividends = data[ticker].dividends(period=f"{years}y")
-        data[ticker]['Dividends'] = dividends
+        ticker_obj = yf.Ticker(ticker) 
+        dividends = ticker_obj.dividends(period=f"{years}y")
+        data[ticker] = {'History': ticker_obj.history(period=f"{years}y"),
+                        'Dividends': dividends}
     return data
 
 def get_metrics(data):
