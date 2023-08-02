@@ -10,12 +10,9 @@ def get_data(tickers, years):
     data = {}
     for ticker in tickers:
         ticker_obj = yf.Ticker(ticker)
-        
-        # Remove extra call here
-        dividends = ticker_obj.dividends(period=f"{years}y")  
-        
-        data[ticker] = {'History': ticker_obj.history(period=f"{years}y"),
-                        'Dividends': dividends}
+   
+        data[ticker] = {'History': ticker_obj.history(period=f"{years}y")}
+      
     return data
 
 def get_metrics(data):
