@@ -14,8 +14,9 @@ def get_recovery_days(ex_price, amount, target_recovery):
 
 def calc_dividend_stats(dividends, df):
     stats = {}
-    
-    for dividend in dividends.itertuples():
+    df_dividends = dividends.reset_index()
+
+    for dividend in df_dividends.itertuples():
         ex_date = dividend.Index
         amount = dividend.amount
 
