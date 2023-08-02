@@ -6,7 +6,13 @@ import matplotlib.pyplot as plt
 st.title('Dividend Stock Analysis')
 
 def get_close_price(date, df):
-    return df.loc[df['Date'] == date, 'Close'].values[0]
+    try:
+        # Find the row corresponding to the given date and get the 'Close' price
+        close_price = df.loc[df['Date'] == date, 'Close'].values[0]
+        return close_price
+    except IndexError:
+        # Handle the case where the date is not found in the DataFrame
+        return None
 
 def get_recovery_days(ex_price, amount, target_recovery):
     target_price = ex_price * (1 + target_recovery)
@@ -23,18 +29,23 @@ def calc_dividend_stats(dividends, df):
         # Get closing price on ex-date
         ex_price = get_close_price(ex_date, df)
 
+        if ex_price is None:
+            continue
+
         # Find recovery days
-        days_50 = get_recovery_days(ex_price, amount, 0.5)
-        days_75 = get_recovery_days(ex_price, amount, 0.75)
-        days_100 = get_recovery_days(ex_price, amount, 1.0)
+        stats[ex_date] = {
+            'Ex-Price': ex_price,
+            '50% Target Price': ex_price * 1.5,
+            '75% Target Price': ex_price * 1.75,
+            '100% Target Price': ex_price * 2.0,
+            '50% Recovery Days': get_recovery_days(ex_price, amount, 0.5),
+            '75% Recovery Days': get_recovery_days(ex_price, amount, 0.75),
+            '100% Recovery Days': get_recovery_days(ex_price, amount, 1.0)
+        }
 
-        stats['50% Recovery Days'] = days_50
-        stats['75% Recovery Days'] = days_75
-        stats['100% Recovery Days'] = days_100
+    return pd.DataFrame.from_dict(stats, orient='index')
 
-    return stats
-
-def show_data(data, metrics, dividends):
+def show_data(data, metrics, dividends, dividend_stats):
     for ticker in data:
         df = data[ticker].reset_index()
 
@@ -50,6 +61,9 @@ def show_data(data, metrics, dividends):
 
         # Plot close price and dividends
         plot_data(df, dividends[ticker])
+
+        # Display dividend recovery statistics
+        st.write(dividend_stats.loc[ticker])
 
 def plot_data(df, dividends):
     fig, ax = plt.subplots()
@@ -90,7 +104,8 @@ if tickers:
 
         # Calculate dividend stats
         dividend_stats = calc_dividend_stats(dividend_data[ticker], data[ticker])
+
         metrics[ticker].update(dividend_stats)
 
     # Display results
-    show_data(data, metrics, dividend_data)
+    show_data(data, metrics, dividend_data, dividend_stats)
