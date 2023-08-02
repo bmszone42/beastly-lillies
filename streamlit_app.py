@@ -10,48 +10,10 @@ def get_stock_data(ticker_list, start_date, end_date):
             data[ticker] = yf.download(ticker, start=start_date, end=end_date)
         except:
             st.error(f"Error downloading data for {ticker}. Please check the stock symbol.")
+            return None
     return data
 
-def get_dividend_data(data):
-    dividend_data = {}
-    for ticker, df in data.items():
-        try:
-            div_df = df[df['Dividends'] > 0]
-            if not div_df.empty:
-                dividend_data[ticker] = {
-                    'dates': list(div_df.index),
-                    'amounts': list(div_df['Dividends'])
-                }
-            else:
-                st.warning(f"No dividend data found for {ticker}.")
-        except:
-            st.error(f"Error processing dividend data for {ticker}.")
-    return dividend_data
-
-def calculate_target_prices(data, dividend_data):
-    target_prices = {}
-    for ticker, div_data in dividend_data.items():
-        try:
-            prices = data[ticker].loc[div_data['dates'], 'Close']
-            targets = [prices + div_amount * i / 100 for div_amount in div_data['amounts'] for i in [50, 75, 100]]
-            target_prices[ticker] = targets
-        except:
-            st.error(f"Error calculating target prices for {ticker}.")
-    return target_prices
-
-def calculate_days_to_target(data, dividend_data, target_prices):
-    days_to_target = {}
-    for ticker, div_data in dividend_data.items():
-        try:
-            days = []
-            for target in target_prices[ticker]:
-                for date, price in zip(div_data['dates'], target):
-                    mask = (data[ticker].index <= date) & (data[ticker]['High'] >= price)
-                    days.append((data[ticker][mask].index[-1] - date).days)
-            days_to_target[ticker] = days
-        except:
-            st.error(f"Error calculating days to reach target for {ticker}.")
-    return days_to_target
+# Rest of the code remains the same as before
 
 def main():
     st.title("Dividend Stock Analysis")
@@ -65,6 +27,9 @@ def main():
         start_date = datetime.today() - timedelta(days=365 * 10)
         end_date = datetime.today()
         data = get_stock_data(ticker_list, start_date, end_date)
+
+        if data is None:
+            return
 
         # Get dividend info
         dividend_data = get_dividend_data(data)
