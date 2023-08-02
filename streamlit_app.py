@@ -16,6 +16,9 @@ def get_dividend_data(data):
     dividend_data = {}
     for ticker, df in data.items():
         try:
+            # Debugging statement to print data for each stock
+            print(f"Data for {ticker}:\n{df.head()}\n")
+
             div_df = df[df['Dividends'] > 0]
             if not div_df.empty:
                 dividend_data[ticker] = {
@@ -27,6 +30,7 @@ def get_dividend_data(data):
         except:
             st.error(f"Error processing dividend data for {ticker}.")
     return dividend_data
+
 
 def calculate_target_prices(data, dividend_data):
     target_prices = {}
