@@ -11,6 +11,8 @@ symbol = st.text_input('Enter Stock Symbol', 'AAPL')
 ticker = yf.Ticker(symbol)
 info = ticker.info
 
+st.write(info)
+
 # Display data
 st.header(symbol + ' Data')
 st.markdown('**Closing Price:** ' + str(info['previousClose']))
