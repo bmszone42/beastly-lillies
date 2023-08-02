@@ -14,16 +14,15 @@ def get_metrics(data):
     metrics = {}
     for ticker in data:
         history = data[ticker]
-        dividends = history['Dividends'].to_datetime()
+        dividends = history['Dividends']
         metrics[ticker] = {
             '52 Week High': history['High'].max(),
             '52 Week Low': history['Low'].min(),
-            'Dividend': dividends['Dividends'].max(),
-            'Yield': history['dividendYield'] * 100,
+            'Dividend': dividends.max(),
+            'Yield': (dividends / history['Close'].shift(1)) * 100,
             'Volume': history['Volume'].mean()
         }
     return metrics
-
 
 def add_div_analysis(data, metrics, years):
     analysis = {}
@@ -31,7 +30,7 @@ def add_div_analysis(data, metrics, years):
         dividends = data[ticker]['Dividends']
         div_days = [(x - dividends.index[0]).days for x in dividends.index]
         div_dates = [dividends.index[0] + timedelta(days=x) for x in div_days]
-        div_yields = [metrics[ticker]['Yield'] * y / 100 for y in dividends['Dividends']]
+        div_yields = [metrics[ticker]['Yield'].loc[date] / 100 * div for date, div in zip(dividends.index, dividends)]
 
         prices = data[ticker]['Close']
         highs = data[ticker]['High']
@@ -63,10 +62,10 @@ if st.button('Analyze'):
         analysis = add_div_analysis(data, metrics, years)
 
         m_df = pd.DataFrame(metrics).T
-        a_df = pd.DataFrame(analysis).T
+        a_df = pd.DataFrame({ticker: analysis[ticker]['Avg'] for ticker in analysis}).T
 
         st.subheader('Metrics')
         st.table(m_df)
 
         st.subheader('Dividend Analysis')
-        st.table(a_df['Avg'])
+        st.table(a_df)
