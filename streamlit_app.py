@@ -12,7 +12,7 @@ years = st.slider('Select number of years', 1, 10, 5)
 def get_data(symbol):
     return yf.download(symbol, period='5y')
 
-df = get_data(symbol)
+df = get_data(symbol, dividends=True)
 
 dividends = df[['Dividends']]
 prices = df[['Close']]
