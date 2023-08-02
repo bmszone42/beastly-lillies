@@ -12,11 +12,11 @@ if button:
 
     # Download data
     ticker_list = tickers.split()
-    data = {} 
-    start_date = datetime.today() - timedelta(days=365*10)
+    data = {}
+    start_date = datetime.today() - timedelta(days=365 * 10)
     end_date = datetime.today()
     for ticker in ticker_list:
-        data[ticker] = yf.download(ticker,start=start_date, end=end_date)
+        data[ticker] = yf.download(ticker, start=start_date, end=end_date)
 
     # Get current info
     current_info = {}
@@ -39,17 +39,17 @@ if button:
         prices = data[ticker].loc[div_dates, 'Close']
 
         # Calculate target prices
-        targets = [prices + div_amounts*i/100 for i in [50, 75, 100]]
-        
+        targets = [prices + div_amounts * i / 100 for i in [50, 75, 100]]
+
         # Find number of days to reach target
         days_to_target = []
         for idx, target in enumerate(targets):
             days = []
             for date, price in zip(div_dates, target):
                 mask = (data[ticker].index <= date) & (data[ticker]['High'] >= price)
-                days.append(mask.idxmax())
+                days.append((data[ticker][mask].index[-1] - date).days)
             days_to_target.append(days)
-        
+
         # Add results to dataframe
         df[ticker] = days_to_target
 
@@ -58,7 +58,7 @@ if button:
 
     # Output additional info
     for ticker in ticker_list:
-        st.subheader(ticker) 
+        st.subheader(ticker)
         st.write("Closing Price:", current_info[ticker]['regularMarketPrice'])
         st.write("52 Week High:", current_info[ticker]['fiftyTwoWeekHigh'])
         st.write("52 Week Low:", current_info[ticker]['fiftyTwoWeekLow'])
@@ -66,6 +66,6 @@ if button:
         st.write("Dividend:", current_info[ticker]['dividendRate'])
         st.write("Dividend Yield:", current_info[ticker]['dividendYield'])
         st.write("Average Volume:", current_info[ticker]['averageDailyVolume10Day'])
-        
+
         st.write("Link to Chart:")
         st.write(f"https://finance.yahoo.com/chart/{ticker}")
