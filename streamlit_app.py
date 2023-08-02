@@ -12,13 +12,13 @@ def get_recovery_days(ex_price, amount, target_recovery):
     target_price = ex_price * (1 + target_recovery)
     return (target_price - ex_price) / amount
 
-def calc_dividend_stats(dividends, df):
+ddef calc_dividend_stats(dividends, df):
     stats = {}
     df_dividends = dividends.reset_index()
 
     for dividend in df_dividends.itertuples():
         ex_date = dividend.Index
-        amount = dividend.amount
+        amount = dividend._asdict()['Dividends']
 
         # Get closing price on ex-date
         ex_price = get_close_price(ex_date, df)
