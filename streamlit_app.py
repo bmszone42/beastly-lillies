@@ -1,71 +1,71 @@
 import yfinance as yf
+import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
-import pandas as pd
-import numpy as np
 
-st.title('Dividend Investing Analysis')
+st.title("Dividend Stock Analysis")
 
-def get_data(tickers, years):
-    data = yf.download(tickers, start=datetime.today() - timedelta(days=365 * years), end=datetime.today())
-    return data
+tickers = st.text_input("Enter stock symbols separated by spaces")
+button = st.button("Analyze")
 
-def get_metrics(data):
-    metrics = {}
-    for ticker in data:
-        history = data[ticker]
-        dividends = history['Dividends']
-        metrics[ticker] = {
-            '52 Week High': history['High'].max(),
-            '52 Week Low': history['Low'].min(),
-            'Dividend': dividends.max(),
-            'Yield': (dividends / history['Close'].shift(1)) * 100,
-            'Volume': history['Volume'].mean()
-        }
-    return metrics
+if button:
 
-def add_div_analysis(data, metrics, years):
-    analysis = {}
-    for ticker in data:
-        dividends = data[ticker]['Dividends']
-        div_days = [(x - dividends.index[0]).days for x in dividends.index]
-        div_dates = [dividends.index[0] + timedelta(days=x) for x in div_days]
-        div_yields = [metrics[ticker]['Yield'].loc[date] / 100 * div for date, div in zip(dividends.index, dividends)]
+    # Download data
+    ticker_list = tickers.split()
+    data = {} 
+    start_date = datetime.today() - timedelta(days=365*10)
+    end_date = datetime.today()
+    for ticker in ticker_list:
+        data[ticker] = yf.download(ticker,start=start_date, end=end_date)
 
-        prices = data[ticker]['Close']
-        highs = data[ticker]['High']
+    # Get current info
+    current_info = {}
+    for ticker in ticker_list:
+        current_info[ticker] = yf.Ticker(ticker).info
 
-        perf = {}
-        for i, div_date in enumerate(div_dates):
-            perf[div_date.year] = {}
-            for pct in [50, 75, 100]:
-                target = prices[i] + pct / 100 * div_yields[i]
-                high_price = highs[i:]
-                days = np.argmax(high_price > target)
-                perf[div_date.year][pct] = days
+    # Initialize dataframe
+    col_names = ['50%', '75%', '100%']
+    df = pd.DataFrame(columns=col_names)
 
-        avg_perf = {pct: np.mean([perf[y][pct] for y in perf]) for pct in [50, 75, 100]}
+    # Analyze each ticker
+    for ticker in ticker_list:
 
-        analysis[ticker] = {'Perf': perf, 'Avg': avg_perf}
+        # Get dividend info
+        div_df = data[ticker][data[ticker]['Dividends'] > 0]
+        div_dates = list(div_df.index)
+        div_amounts = list(div_df['Dividends'])
 
-    return analysis
+        # Get price on dividend dates
+        prices = data[ticker].loc[div_dates, 'Close']
 
-tickers = st.text_input('Enter stock tickers separated by spaces')
-years = st.number_input('Enter number of years to analyze', 5, 10, 10)
+        # Calculate target prices
+        targets = [prices + div_amounts*i/100 for i in [50, 75, 100]]
+        
+        # Find number of days to reach target
+        days_to_target = []
+        for idx, target in enumerate(targets):
+            days = []
+            for date, price in zip(div_dates, target):
+                mask = (data[ticker].index <= date) & (data[ticker]['High'] >= price)
+                days.append(mask.idxmax())
+            days_to_target.append(days)
+        
+        # Add results to dataframe
+        df[ticker] = days_to_target
 
-if st.button('Analyze'):
+    # Output results
+    st.dataframe(df)
 
-    if tickers:
-        tickers = tickers.split()
-        data = get_data(tickers, years)
-        metrics = get_metrics(data)
-        analysis = add_div_analysis(data, metrics, years)
-
-        m_df = pd.DataFrame(metrics).T
-        a_df = pd.DataFrame({ticker: analysis[ticker]['Avg'] for ticker in analysis}).T
-
-        st.subheader('Metrics')
-        st.table(m_df)
-
-        st.subheader('Dividend Analysis')
-        st.table(a_df)
+    # Output additional info
+    for ticker in ticker_list:
+        st.subheader(ticker) 
+        st.write("Closing Price:", current_info[ticker]['regularMarketPrice'])
+        st.write("52 Week High:", current_info[ticker]['fiftyTwoWeekHigh'])
+        st.write("52 Week Low:", current_info[ticker]['fiftyTwoWeekLow'])
+        st.write("1 Year Target:", current_info[ticker]['targetMeanPrice'])
+        st.write("Dividend:", current_info[ticker]['dividendRate'])
+        st.write("Dividend Yield:", current_info[ticker]['dividendYield'])
+        st.write("Average Volume:", current_info[ticker]['averageDailyVolume10Day'])
+        
+        st.write("Link to Chart:")
+        st.write(f"https://finance.yahoo.com/chart/{ticker}")
