@@ -14,7 +14,7 @@ def get_metrics(data):
     metrics = {}
     for ticker in data:
         history = data[ticker]
-        dividends = history['Dividends']
+        dividends = history['Dividends'].to_datetime()
         metrics[ticker] = {
             '52 Week High': history['High'].max(),
             '52 Week Low': history['Low'].min(),
@@ -23,6 +23,7 @@ def get_metrics(data):
             'Volume': history['Volume'].mean()
         }
     return metrics
+
 
 def add_div_analysis(data, metrics, years):
     analysis = {}
