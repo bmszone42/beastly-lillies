@@ -3,69 +3,96 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 
-st.title("Dividend Stock Analysis")
-
-tickers = st.text_input("Enter stock symbols separated by spaces")
-button = st.button("Analyze")
-
-if button:
-
-    # Download data
-    ticker_list = tickers.split()
+def get_stock_data(ticker_list, start_date, end_date):
     data = {}
-    start_date = datetime.today() - timedelta(days=365 * 10)
-    end_date = datetime.today()
     for ticker in ticker_list:
-        data[ticker] = yf.download(ticker, start=start_date, end=end_date)
+        try:
+            data[ticker] = yf.download(ticker, start=start_date, end=end_date)
+        except:
+            st.error(f"Error downloading data for {ticker}. Please check the stock symbol.")
+    return data
 
-    # Get current info
-    current_info = {}
-    for ticker in ticker_list:
-        current_info[ticker] = yf.Ticker(ticker).info
+def get_dividend_data(data):
+    dividend_data = {}
+    for ticker, df in data.items():
+        try:
+            div_df = df[df['Dividends'] > 0]
+            dividend_data[ticker] = {
+                'dates': list(div_df.index),
+                'amounts': list(div_df['Dividends'])
+            }
+        except:
+            st.error(f"No dividend data found for {ticker}.")
+    return dividend_data
 
-    # Initialize dataframe
-    col_names = ['50%', '75%', '100%']
-    df = pd.DataFrame(columns=col_names)
+def calculate_target_prices(data, dividend_data):
+    target_prices = {}
+    for ticker, div_data in dividend_data.items():
+        try:
+            prices = data[ticker].loc[div_data['dates'], 'Close']
+            targets = [prices + div_amount * i / 100 for div_amount in div_data['amounts'] for i in [50, 75, 100]]
+            target_prices[ticker] = targets
+        except:
+            st.error(f"Error calculating target prices for {ticker}.")
+    return target_prices
 
-    # Analyze each ticker
-    for ticker in ticker_list:
+def calculate_days_to_target(data, dividend_data, target_prices):
+    days_to_target = {}
+    for ticker, div_data in dividend_data.items():
+        try:
+            days = []
+            for target in target_prices[ticker]:
+                for date, price in zip(div_data['dates'], target):
+                    mask = (data[ticker].index <= date) & (data[ticker]['High'] >= price)
+                    days.append((data[ticker][mask].index[-1] - date).days)
+            days_to_target[ticker] = days
+        except:
+            st.error(f"Error calculating days to reach target for {ticker}.")
+    return days_to_target
+
+def main():
+    st.title("Dividend Stock Analysis")
+
+    tickers = st.text_input("Enter stock symbols separated by spaces")
+    button = st.button("Analyze")
+
+    if button:
+        # Download data
+        ticker_list = tickers.split()
+        start_date = datetime.today() - timedelta(days=365 * 10)
+        end_date = datetime.today()
+        data = get_stock_data(ticker_list, start_date, end_date)
 
         # Get dividend info
-        div_df = data[ticker][data[ticker]['Dividends'] > 0]
-        div_dates = list(div_df.index)
-        div_amounts = list(div_df['Dividends'])
-
-        # Get price on dividend dates
-        prices = data[ticker].loc[div_dates, 'Close']
+        dividend_data = get_dividend_data(data)
 
         # Calculate target prices
-        targets = [prices + div_amounts * i / 100 for i in [50, 75, 100]]
+        target_prices = calculate_target_prices(data, dividend_data)
 
-        # Find number of days to reach target
-        days_to_target = []
-        for idx, target in enumerate(targets):
-            days = []
-            for date, price in zip(div_dates, target):
-                mask = (data[ticker].index <= date) & (data[ticker]['High'] >= price)
-                days.append((data[ticker][mask].index[-1] - date).days)
-            days_to_target.append(days)
+        # Calculate days to reach targets
+        days_to_target = calculate_days_to_target(data, dividend_data, target_prices)
 
-        # Add results to dataframe
-        df[ticker] = days_to_target
+        # Create and display results dataframe
+        col_names = ['50%', '75%', '100%']
+        df = pd.DataFrame(days_to_target, index=col_names).T
+        st.dataframe(df)
 
-    # Output results
-    st.dataframe(df)
+        # Output additional info
+        for ticker in ticker_list:
+            st.subheader(ticker)
+            try:
+                info = yf.Ticker(ticker).info
+                st.write("Closing Price:", info['regularMarketPrice'])
+                st.write("52 Week High:", info['fiftyTwoWeekHigh'])
+                st.write("52 Week Low:", info['fiftyTwoWeekLow'])
+                st.write("1 Year Target:", info['targetMeanPrice'])
+                st.write("Dividend:", info['dividendRate'])
+                st.write("Dividend Yield:", info['dividendYield'])
+                st.write("Average Volume:", info['averageDailyVolume10Day'])
+                st.write("Link to Chart:")
+                st.write(f"https://finance.yahoo.com/chart/{ticker}")
+            except:
+                st.error(f"Error fetching additional info for {ticker}.")
 
-    # Output additional info
-    for ticker in ticker_list:
-        st.subheader(ticker)
-        st.write("Closing Price:", current_info[ticker]['regularMarketPrice'])
-        st.write("52 Week High:", current_info[ticker]['fiftyTwoWeekHigh'])
-        st.write("52 Week Low:", current_info[ticker]['fiftyTwoWeekLow'])
-        st.write("1 Year Target:", current_info[ticker]['targetMeanPrice'])
-        st.write("Dividend:", current_info[ticker]['dividendRate'])
-        st.write("Dividend Yield:", current_info[ticker]['dividendYield'])
-        st.write("Average Volume:", current_info[ticker]['averageDailyVolume10Day'])
-
-        st.write("Link to Chart:")
-        st.write(f"https://finance.yahoo.com/chart/{ticker}")
+if __name__ == "__main__":
+    main()
