@@ -3,6 +3,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 import streamlit as st
 
+
+@st.cache_data
 # Function to check if dividends have been increasing over the past 10 years
 def is_increasing(series):
     return all(x<y for x, y in zip(series, series[1:]))
