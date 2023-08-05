@@ -25,11 +25,7 @@ def calculate(stock_symbol, proceed, years_history):
     else:
         st.write(f"Calculating for {stock_symbol}...")
         
-        current_year = datetime.now().year
-        dividend_dates = hist[(hist.index.year <= current_year) & (hist.index.year >= current_year-3) & (hist['Dividends'] > 0)].index
-        
-        st.write('Dividend dates for the past three years:')
-        st.dataframe(pd.DataFrame(dividend_dates, columns=['Dividend Dates']))
+        dividend_dates = hist[hist['Dividends'] > 0].index
 
         results = []
         for div_date in dividend_dates:
