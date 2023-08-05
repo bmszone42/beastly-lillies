@@ -34,6 +34,10 @@ def calculate(stock_symbol, proceed, years_history):
         results = []
         for div_date in dividend_dates:
             start_date = div_date - timedelta(days=10)
+            # Ensure start_date is a trading day
+            while start_date not in hist.index:
+                start_date -= timedelta(days=1)
+                
             end_date = div_date + timedelta(days=90)
             window_data = hist.loc[start_date:end_date]
 
