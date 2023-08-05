@@ -22,7 +22,6 @@ def select_week():
 # Main function for the Streamlit app
 def main():
     st.title('Dividend Checker')
-
     week_start, week_end = select_week()
 
     if st.button('Find Dividend Stocks'):
