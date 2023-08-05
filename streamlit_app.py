@@ -10,9 +10,12 @@ dividend_dates = ['2023-04-01', '2022-04-01', '2020-04-01', '2019-04-01']  # add
 stock = yf.Ticker(stock_symbol)
 hist = stock.history(period='10y')
 
-# Check if dividends have been increasing over the past 10 years
-dividends = hist[hist['Dividends'] > 0]['Dividends']
-if not dividends.is_monotonic:
+# Function to check if dividends have been increasing over the past 10 years
+def is_increasing(series):
+    return all(x<y for x, y in zip(series, series[1:]))
+
+dividends = hist[hist['Dividends'] > 0]['Dividends'].resample('Y').sum()
+if not is_increasing(dividends):
     print(f"The dividends of {stock_symbol} have not been consistently increasing over the past 10 years.")
     proceed = input("Do you wish to proceed? (y/n) ")
     if proceed.lower() != 'y':
