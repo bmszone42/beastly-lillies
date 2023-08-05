@@ -59,21 +59,26 @@ def calculate(stock_symbol, proceed, years_history):
                 targets = [(opening_price + dividend) * x for x in [1.5, 1.75, 2.0]]
 
                 target_days = {}
+                target_dates = {}  # new dictionary to hold the dates
+                
                 # Loop through each target
                 for i, target in enumerate(targets):
                     # Find the first day where the closing price is greater than or equal to the target
                     target_day = window_data[window_data['Close'] >= target].index.min()
                     if pd.notna(target_day):
                         target_days[f"{50*(i+1)}_target_days"] = (target_day - start_date).days
-
+                        target_dates[f"{50*(i+1)}_target_date"] = target_day  # store the date in the new dictionary
+                
                 # Calculate average
                 if target_days.values():
                     average_days = sum(target_days.values()) / len(target_days.values())
                 else:
                     average_days = None
 
-                target_days.update({'div_date': div_date, 'average_days': average_days})
-                results.append(target_days)
+                result = {'div_date': div_date, 'average_days': average_days}
+                result.update(target_days)  # add the target_days data
+                result.update(target_dates)  # add the target_dates data
+                results.append(result)
 
         # Convert results to a DataFrame for easier viewing
         results_df = pd.DataFrame(results)
