@@ -15,7 +15,13 @@ def calculate(stock_symbol, proceed, dividend_dates, years_history):
     # Convert the DateTimeIndex to a timezone-naive DateTimeIndex
     hist.index = hist.index.tz_localize(None)
 
+    st.write('Historical data:')
+    st.dataframe(hist)
+
     dividends = hist[hist['Dividends'] > 0]['Dividends'].resample('Y').sum()
+
+    st.write('Yearly dividends:')
+    st.dataframe(dividends)
 
     if not is_increasing(dividends) and proceed == 'No':
         st.write(f"The dividends of {stock_symbol} have not been consistently increasing over the past {years_history} years.")
@@ -31,6 +37,9 @@ def calculate(stock_symbol, proceed, dividend_dates, years_history):
 
             # Get the window data
             window_data = hist.loc[start_date:end_date]
+
+            st.write(f'Data for window from {start_date} to {end_date}:')
+            st.dataframe(window_data)
 
             if div_date in hist.index:  
                 # Get the dividend
@@ -61,7 +70,8 @@ def calculate(stock_symbol, proceed, dividend_dates, years_history):
 
         # Convert results to a DataFrame for easier viewing
         results_df = pd.DataFrame(results)
-        st.write(results_df)
+        st.write('Results:')
+        st.dataframe(results_df)
 
 def main():
     # Define the stock and dividend dates
