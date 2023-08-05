@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import datetime, timedelta
 from finance_calendars import finance_calendars as fc
+import pandas as pd
 
 # Function to get dividends
 def get_dividends(start_date, end_date):
