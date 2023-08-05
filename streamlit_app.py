@@ -21,7 +21,7 @@ def get_stock_data(ticker_list, start_date, end_date):
 # Function to select a week
 def select_week():
     today = datetime.today()
-    week_start = st.date_input('Start date', today)
+    week_start = st.sidebar.date_input('Start date', today)
     week_end = week_start + timedelta(days=6)
     return week_start, week_end
 
@@ -35,11 +35,12 @@ def main():
 
     week_start, week_end = select_week()
 
-    data = get_stock_data(tickers, week_start, week_end)
+    if st.button('Find Dividend Stocks'):
+        data = get_stock_data(tickers, week_start, week_end)
 
-    for ticker, dividends in data.items():
-        st.write(f"{ticker} dividends for selected week:")
-        st.write(dividends)
+        for ticker, dividends in data.items():
+            st.write(f"{ticker} dividends for selected week:")
+            st.write(dividends)
 
 if __name__ == "__main__":
     main()
