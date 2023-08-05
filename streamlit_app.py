@@ -7,7 +7,7 @@ import streamlit as st
 def is_increasing(series):
     return all(x<y for x, y in zip(series, series[1:]))
 
-def calculate(stock_symbol, proceed, dividend_dates, years_history):
+def calculate(stock_symbol, proceed, years_history):
     # Get the stock data
     stock = yf.Ticker(stock_symbol)
     hist = stock.history(period=f'{years_history}y')
@@ -28,10 +28,17 @@ def calculate(stock_symbol, proceed, dividend_dates, years_history):
     else:
         # Proceed with calculations
         st.write(f"Calculating for {stock_symbol}...")
+        
+        # Get dividend dates for current and past 3 years
+        current_year = datetime.now().year
+        dividend_dates = hist[(hist.index.year <= current_year) & (hist.index.year >= current_year-3) & (hist['Dividends'] > 0)].index
+        
+        st.write('Dividend dates for the past three years:')
+        st.dataframe(pd.DataFrame(dividend_dates, columns=['Dividend Dates']))
+
         results = []
         # Loop through each dividend date
-        for div_date_str in dividend_dates:
-            div_date = datetime.strptime(div_date_str, '%Y-%m-%d').date()
+        for div_date in dividend_dates:
             start_date = div_date - timedelta(days=10)
             end_date = div_date + timedelta(days=90)
 
@@ -74,16 +81,12 @@ def calculate(stock_symbol, proceed, dividend_dates, years_history):
         st.dataframe(results_df)
 
 def main():
-    # Define the stock and dividend dates
+    # Define the stock
     stock_symbol = st.sidebar.text_input("Enter stock symbol", 'AAPL')
     proceed = st.sidebar.selectbox("Proceed if dividends are not increasing?", ('Yes', 'No'))
-    dividend_dates = st.sidebar.text_area("Enter dividend dates (YYYY-MM-DD), separated by commas", '2023-04-01,2022-04-01,2020-04-01,2019-04-01')
     years_history = st.sidebar.slider("Select range for historical data (years)", 1, 20, 10)
-
-    # Convert dividend_dates from string to list of date strings
-    dividend_dates = [date.strip() for date in dividend_dates.split(',')]
     
-    calculate(stock_symbol, proceed, dividend_dates, years_history)
+    calculate(stock_symbol, proceed, years_history)
 
 if __name__ == "__main__":
     main()
