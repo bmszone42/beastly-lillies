@@ -44,7 +44,7 @@ def calculate(stock_symbol, proceed, years_history):
                 dividend = hist.loc[div_date, 'Dividends']
                 opening_price = hist.loc[start_date, 'Open']
 
-                targets = [(opening_price + dividend) * x for x in [1.5, 1.75, 2.0]]
+                targets = [opening_price * (1 + x) for x in [0.5, 0.75, 1.0]]
                 div_date_price = hist.loc[div_date, 'Close']
 
                 target_days = {}
