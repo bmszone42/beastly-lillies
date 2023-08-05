@@ -12,6 +12,9 @@ def calculate(stock_symbol, proceed, dividend_dates, years_history):
     stock = yf.Ticker(stock_symbol)
     hist = stock.history(period=f'{years_history}y')
 
+    # Convert the DateTimeIndex to a timezone-naive DateTimeIndex
+    hist.index = hist.index.tz_localize(None)
+
     dividends = hist[hist['Dividends'] > 0]['Dividends'].resample('Y').sum()
 
     if not is_increasing(dividends) and proceed == 'No':
