@@ -3,8 +3,6 @@ import pandas as pd
 from datetime import datetime, timedelta
 import streamlit as st
 
-
-@st.cache_data
 # Function to check if dividends have been increasing over the past 10 years
 def is_increasing(series):
     return all(x<y for x, y in zip(series, series[1:]))
@@ -59,8 +57,10 @@ def calculate(stock_symbol, proceed, years_history):
 
                 # Calculate targets
                 targets = [(opening_price + dividend) * x for x in [1.5, 1.75, 2.0]]
+                div_date_price = hist.loc[div_date, 'Close']  # get closing price on the dividend date
 
                 target_days = {}
+                target_prices = {}  # new dictionary to hold the prices
                 target_dates = {}  # new dictionary to hold the dates
                 
                 # Loop through each target
@@ -69,7 +69,8 @@ def calculate(stock_symbol, proceed, years_history):
                     target_day = window_data[window_data['Close'] >= target].index.min()
                     if pd.notna(target_day):
                         target_days[f"{50*(i+1)}_target_days"] = (target_day - start_date).days
-                        target_dates[f"{50*(i+1)}_target_date"] = target_day  # store the date in the new dictionary
+                        target_prices[f"{50*(i+1)}_target_price"] = window_data.loc[target_day, 'Close']  # store the price
+                        target_dates[f"{50*(i+1)}_target_date"] = target_day  # store the date
                 
                 # Calculate average
                 if target_days.values():
@@ -77,8 +78,13 @@ def calculate(stock_symbol, proceed, years_history):
                 else:
                     average_days = None
 
-                result = {'div_date': div_date, 'average_days': average_days}
+                result = {
+                    'div_date': div_date, 
+                    'div_date_price': div_date_price,  # add the dividend date price
+                    'average_days_to_reach_target': average_days  # renamed 'average_days'
+                }
                 result.update(target_days)  # add the target_days data
+                result.update(target_prices)  # add the target_prices data
                 result.update(target_dates)  # add the target_dates data
                 results.append(result)
 
