@@ -22,10 +22,10 @@ def get_historical_data(symbol, years):
 
 def get_dividends(symbol):
   ticker = yf.Ticker(symbol)
-  dividends = ticker.dividends  
-  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d'))
+  dividends = ticker.dividends
+  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d%z'))
   return dividends
-
+  
 def calculate_target_prices(dividend, opening_price):
   targets = {
       f"{p*100}%": opening_price + dividend * p
