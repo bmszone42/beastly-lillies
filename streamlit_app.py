@@ -9,7 +9,7 @@ def calculate(stock_symbol, proceed, years_history):
     st.warning('The stock does not have an increasing dividend over the past 10 years.')
     return
 
-  stock = yf.Ticker(stock_symbol)
+  stock = yf.Ticker(stock_symbol) 
   
   hist = stock.history(period=f'{years_history}y')
 
@@ -27,12 +27,18 @@ def calculate(stock_symbol, proceed, years_history):
     
     opening_price = hist.loc[start_date, 'Open']
 
+    # Normalize UTC offsets
+    start_date = start_date.tz_convert(None)
+    div_date = div_date.tz_convert(None)
+    
+    window_data = hist.loc[start_date:div_date + timedelta(days=90)]
+
     price_on_dividend_date = hist.loc[div_date, 'Open']
 
     targets = {
       '50%': opening_price + dividend * 0.5,
       '75%': opening_price + dividend * 0.75,
-      '100%': opening_price + dividend * 1.0  
+      '100%': opening_price + dividend * 1.0
     }
 
     target_dates = {key: None for key in targets.keys()}
