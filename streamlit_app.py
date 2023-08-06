@@ -58,7 +58,7 @@ def calculate(stock_symbol, proceed, years_history):
     st.dataframe(results_df)
 
 def main():
-    stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'STOCK_SYMBOL')
+    stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
     years_history = st.sidebar.slider('Select number of years for history:', min_value=3, max_value=20, value=3)
     proceed_button = st.sidebar.button('Execute')
 
