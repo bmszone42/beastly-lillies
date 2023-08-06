@@ -6,6 +6,7 @@ import pytz
 import pandas as pd
 import yfinance as yf
 import streamlit as st
+import dateparser
 
 # Constants
 DEFAULT_YEARS = 3
@@ -31,58 +32,6 @@ def calculate_target_prices(dividend, opening_price):
       for p in TARGET_PERCENTS
   }
   return targets
-
-
-
-# def find_target_dates(targets, data):
-#   target_dates = {p:None for p in targets.keys()}
-
-#   for date, row in data.iterrows():
-#     open_price = row['Open']  
-#     for p, target in targets.items():
-#       if open_price >= target and target_dates[p] is None:
-#         target_dates[p] = date
-        
-#   return target_dates
-  
-# def analyze_dividends(symbol, years=DEFAULT_YEARS):
-  
-#   data = get_historical_data(symbol, years)
-#   dividends = get_dividends(symbol)
-
-#   results = []
-
-#   for dividend_date, dividend in dividends.iteritems():
-
-#     start_date = get_first_valid_date(dividend_date, data)
-#     open_price = data.loc[start_date, 'Open']
-#     price_on_dividend_date = data.loc[dividend_date, 'Open']
-
-#     targets = calculate_target_prices(dividend, open_price)
-#     target_dates = find_target_dates(targets, data)
-
-#     pcts_met = {p: date is not None for p, date in target_dates.items()}
-#     days_to_targets = {p: (target_dates[p] - dividend_date).days  
-#                         for p, date in target_dates.items() if date}
-
-#     result_row = {
-#       "Dividend Date": dividend_date,
-#       "Opening Date": start_date,
-#       "Opening Price": open_price,  
-#       "Price on Dividend Date": price_on_dividend_date,
-#       "50% Target": targets['50%'],
-#       "75% Target": targets['75%'],
-#       "100% Target": targets['100%'], 
-#       "50% Target Date": target_dates['50%'],
-#       "75% Target Date": target_dates['75%'],
-#       "100% Target Date": target_dates['100%'],
-#       "Percent Targets Met": pcts_met,
-#       "Days to Meet Targets": days_to_targets
-#     }
-
-#     results.append(result_row)
-  
-#   return pd.DataFrame(results)
 
 def get_first_valid_date(dividend_date, data):
   """Find the first valid date that is at least 10 business days before the dividend date."""
