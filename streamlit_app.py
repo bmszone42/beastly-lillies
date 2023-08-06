@@ -91,6 +91,13 @@ def analyze_dividends(symbol, years=DEFAULT_YEARS):
   
   return pd.DataFrame(results)
 
+def print_df_info(df):
+  print("DataFrame Info:")
+  print(f"Columns: {df.columns.tolist()}") 
+  print(f"Index: {df.index.name} as {df.index.dtype}")
+  print(f"Index min: {df.index.min()} max: {df.index.max()}")
+
+
 def main():
   
   st.title("Dividend Analysis")
@@ -99,7 +106,10 @@ def main():
   run_btn = st.sidebar.button("Analyze")
 
   if run_btn:
+    
     results = analyze_dividends(symbol, years)
+    
+    print_df_info(dividends)
 
     st.markdown("## Results")
     st.dataframe(results)
