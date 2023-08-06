@@ -1,15 +1,14 @@
 import yfinance as yf
-import pandas as pd 
+import pandas as pd
 import streamlit as st
-from datetime import datetime, timedelta
-from pandas.tseries.offsets import BusinessDay
+from datetime import datetime, timedelta  
 
 def calculate(stock_symbol, proceed, years_history):
 
   if not proceed:
     st.warning('The stock does not have an increasing dividend over the past 10 years.')
     return
-    
+
   stock = yf.Ticker(stock_symbol)
   hist = stock.history(period=f'{years_history}y')
 
@@ -20,23 +19,20 @@ def calculate(stock_symbol, proceed, years_history):
 
   results = []
 
+  # Set minimum days before dividend
+  min_days_before = 10
+
   for div_date, dividend in dividends.items():
 
-    # Try up to 10 days before dividend
-    for i in range(1,11):
-      start_date = div_date - BusinessDay(i)
+    # Initialize to min days before 
+    start_date = div_date - timedelta(days=min_days_before)
     
-      try:
-        opening_price = hist.loc[start_date, 'Open']
-        break
-        
-      except KeyError:
-        continue  
-        
-    # Default to first date if no match       
-    if 'opening_price' not in locals():
-      start_date = hist.index[0]
-      opening_price = hist.loc[start_date, 'Open']
+    while start_date not in hist.index:
+    
+      # Decrement start_date  
+      start_date -= timedelta(days=1)
+
+    opening_price = hist.loc[start_date, 'Open']
 
     price_on_dividend_date = hist.loc[div_date, 'Open']
 
@@ -64,7 +60,7 @@ def calculate(stock_symbol, proceed, years_history):
       '75% Target': targets['75%'],
       '100% Target': targets['100%'],
       '50% Achieved': target_dates['50%'].strftime('%Y-%m-%d') if target_dates['50%'] else None,
-      '75% Achieved': target_dates['75%'].strftime('%Y-%m-%d') if target_dates['75%'] else None,  
+      '75% Achieved': target_dates['75%'].strftime('%Y-%m-%d') if target_dates['75%'] else None,
       '100% Achieved': target_dates['100%'].strftime('%Y-%m-%d') if target_dates['100%'] else None,
     }
 
@@ -73,7 +69,7 @@ def calculate(stock_symbol, proceed, years_history):
   results_df = pd.DataFrame(results)
   
   st.dataframe(results_df)
-  
+
 def main():
 
   stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
