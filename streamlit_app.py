@@ -28,8 +28,8 @@ def calculate(stock_symbol, proceed, years_history):
     opening_price = hist.loc[start_date, 'Open']
 
    # Convert datetime to date
-    div_date = div_date.astype('datetime64[D]')
-    start_date = start_date.astype('datetime64[D]')
+    div_date = div_date.date()
+    start_date = start_date.date()
     
     window_data = hist.loc[start_date:div_date + timedelta(days=90)]
 
