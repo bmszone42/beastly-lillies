@@ -86,11 +86,21 @@ def calculate_target_prices(dividend, opening_price):
 
 def get_first_valid_date(dividend_date, data):
   """Find the first valid date that is at least 10 business days before the dividend date."""
-  for i in range(1, 30):
-    date = dividend_date - timedelta(days=i)
+  days_back = 10
+  while days_back > 0:
+    date = dividend_date - timedelta(days=days_back)
     if data.loc[date, 'Open'] is not None:
-      return date
+      if is_business_day(date):
+        return date
+    days_back -= 1
   return None
+
+def is_business_day(date):
+  """Returns True if the date is a business day, False otherwise."""
+  if date.weekday() == 5 or date.weekday() == 6:
+    return False
+  else:
+    return True
 
 def analyze_dividends(symbol, years=DEFAULT_YEARS):
   
