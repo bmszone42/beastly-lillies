@@ -25,11 +25,16 @@ def calculate(stock_symbol, proceed, years_history):
 
   for div_date, dividend in dividends.items():
 
-    # Offset dividend date by 10 business days
-    start_date = np.busday_offset(div_date, -10, roll='forward')
+     # Get date range
+    days_before = 10
     
-    opening_price = hist.loc[start_date, 'Open']
+    dates = pd.date_range(end=div_date, periods=days_before+1, freq='B')
+    
+    # Get first date
+    start_date = dates[0]
 
+    opening_price = hist.loc[start_date, 'Open']
+    
     price_on_dividend_date = hist.loc[div_date, 'Open']
 
     targets = {
