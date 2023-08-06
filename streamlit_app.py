@@ -93,7 +93,7 @@ def analyze_dividends(symbol, years=DEFAULT_YEARS):
 def main():
   
   st.title("Dividend Analysis")
-  symbol = st.sidebar.text_input("Symbol". "AAPL")
+  symbol = st.sidebar.text_input("Symbol", "AAPL")
   years = st.sidebar.slider("Years", 1-, MAX_YEARS, DEFAULT_YEARS) 
   run_btn = st.sidebar.button("Analyze")
 
