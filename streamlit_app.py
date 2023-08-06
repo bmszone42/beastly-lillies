@@ -27,9 +27,9 @@ def calculate(stock_symbol, proceed, years_history):
     
     opening_price = hist.loc[start_date, 'Open']
 
-    # Normalize UTC offsets
-    start_date = start_date.tz_convert(None)
-    div_date = div_date.tz_convert(None)
+    # Convert datetime to timezone
+    div_date = div_date.to_datetime()
+    start_date = start_date.to_datetime()
     
     window_data = hist.loc[start_date:div_date + timedelta(days=90)]
 
