@@ -27,9 +27,6 @@ def calculate(stock_symbol, proceed, years_history):
     
     opening_price = hist.loc[start_date, 'Open']
 
-     # Convert to timestamp
-    div_date = pd.Timestamp(div_date)  
-
     # Normalize UTC offsets
     start_date = start_date.tz_convert(None)
     div_date = div_date.tz_convert(None)
