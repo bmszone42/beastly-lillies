@@ -23,6 +23,9 @@ def calculate(stock_symbol, proceed, years_history):
   # Set minimum days before dividend
   min_days_before = 10
 
+  # Initialize opening price 
+  opening_price = None
+
   for div_date, dividend in dividends.items():
 
      # Get date range
