@@ -19,7 +19,9 @@ def calculate(stock_symbol, proceed, years_history):
   
   results = []
 
-  for div_date, dividend in dividends.iterrows():
+  #for div_date, dividend in dividends.iterrows():
+  for div_date, dividend in dividends.items():
+    
     start_date = div_date - timedelta(days=10)
 
     # Ensure start_date is a trading day
