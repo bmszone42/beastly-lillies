@@ -34,6 +34,9 @@ def calculate(stock_symbol, proceed, years_history):
         tz = pytz.timezone('UTC')
         start_date = tz.localize(datetime.combine(start_date, datetime.min.time()))
 
+        # Make the div_date tz-aware using the same timezone as dividends DataFrame
+        div_date = tz.localize(datetime.combine(div_date, datetime.min.time()))
+
         window_data = hist.loc[start_date:div_date + timedelta(days=90)]
 
         price_on_dividend_date = hist.loc[div_date, 'Open']
