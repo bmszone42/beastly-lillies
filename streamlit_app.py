@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
+from pandas.tseries.offsets import BDay
 
 def calculate(stock_symbol, proceed, years_history):
 
@@ -14,7 +15,6 @@ def calculate(stock_symbol, proceed, years_history):
   
   dividends = stock.dividends
   # Convert index to datetime
-  #dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d'))
   dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y-%m-%d %H:%M:%S%z'))
   
   results = []
@@ -22,7 +22,8 @@ def calculate(stock_symbol, proceed, years_history):
   #for div_date, dividend in dividends.iterrows():
   for div_date, dividend in dividends.items():
     
-    start_date = div_date - timedelta(days=10)
+    #start_date = div_date - timedelta(days=10)
+    start_date = div_date - BDay(10)
 
     # Ensure start_date is a trading day
     while start_date not in hist.index:
