@@ -16,8 +16,9 @@ def calculate(stock_symbol, proceed, years_history):
 
     dividends = stock.dividends
 
-    # Convert index to datetime
-    dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y-%m-%d %H:%M:%S%z'))
+    # Convert index to datetime and ensure they have the same datetime format
+    dividends.index = pd.to_datetime(dividends.index)
+    hist.index = pd.to_datetime(hist.index)
 
     results = []
 
@@ -37,7 +38,9 @@ def calculate(stock_symbol, proceed, years_history):
         # Make the div_date tz-aware using the same timezone as dividends DataFrame
         div_date = tz.localize(datetime.combine(div_date, datetime.min.time()))
 
-        window_data = hist.loc[start_date:div_date + timedelta(days=90)]
+        # Check if div_date exists in hist DataFrame before accessing it
+        if div_date not in hist.index:
+            continue
 
         price_on_dividend_date = hist.loc[div_date, 'Open']
 
@@ -48,6 +51,8 @@ def calculate(stock_symbol, proceed, years_history):
         }
 
         target_dates = {key: None for key in targets.keys()}
+
+        window_data = hist.loc[start_date:div_date + timedelta(days=90)]
 
         for date, row in window_data.iterrows():
             for key, target in targets.items():
