@@ -35,11 +35,10 @@ def get_first_valid_date(dividend_date, data):
         return date        
       days_back -= 1
   return None   
+  
 def is_business_day(date):
-  if date.weekday() == 5 or date.weekday() == 6:    
-    return False
-  else:
-    return True 
+  return date.weekday() < 5
+  
 def analyze_dividends(symbol, years=DEFAULT_YEARS):
   data = get_historical_data(symbol, years)
   dividends = get_dividends(symbol)
