@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-
+import pytz
 import pandas as pd
 import yfinance as yf
 import streamlit as st
@@ -23,7 +23,10 @@ def get_historical_data(symbol, years):
 def get_dividends(symbol):
   ticker = yf.Ticker(symbol)
   dividends = ticker.dividends
-  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d%H%M%S%z'))
+  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d%H%M%S%Z'))
+  dividends.index = dividends.index.tz_localize('UTC')
+  for dividend in dividends.index:
+    dividend = dividend.tz_convert(pytz.timezone(dividend.tzinfo))
   return dividends
 
 
