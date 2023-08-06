@@ -14,7 +14,8 @@ def calculate(stock_symbol, proceed, years_history):
   
   dividends = stock.dividends
   # Convert index to datetime
-  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d'))
+  #dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d'))
+  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y-%m-%d %H:%M:%S%z'))
   
   results = []
 
