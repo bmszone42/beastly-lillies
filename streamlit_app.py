@@ -26,6 +26,7 @@ def get_dividends(symbol):
   dividends = ticker.dividends
   dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y-%m-%dT%H:%M:%S%z'))
   return dividends
+  
 def calculate_target_prices(dividend, opening_price):
   targets = {
       f"{p*100}%": opening_price + dividend * p
@@ -102,6 +103,11 @@ def main():
 
     st.markdown("## Results")
     st.dataframe(results)
+
+    # Display dividends DataFrame
+    st.markdown("## Dividends Data")  
+    dividends = get_dividends(symbol)
+    st.dataframe(dividends)
 
     cols = st.columns(2)
     cols[0].metric("50% Target Met", f"{results['Percent Targets Met']['50%'].mean()*100:.1f}%")
