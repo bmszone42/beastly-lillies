@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta  
+import numpy as np
 
 def calculate(stock_symbol, proceed, years_history):
 
@@ -24,14 +25,9 @@ def calculate(stock_symbol, proceed, years_history):
 
   for div_date, dividend in dividends.items():
 
-    # Initialize to min days before 
-    start_date = div_date - timedelta(days=min_days_before)
+    # Offset dividend date by 10 business days
+    start_date = np.busday_offset(div_date, -10, roll='forward')
     
-    while start_date not in hist.index:
-    
-      # Decrement start_date  
-      start_date -= timedelta(days=1)
-
     opening_price = hist.loc[start_date, 'Open']
 
     price_on_dividend_date = hist.loc[div_date, 'Open']
