@@ -6,55 +6,42 @@ from datetime import datetime, timedelta
 def calculate(stock_symbol, proceed, years_history):
 
   if not proceed:
-    st.warning('The stock does not have an increasing dividend over the past 10 years.')
+    st.warning('The stock does not have an increasing dividend over the past 10 years.')  
     return
 
   stock = yf.Ticker(stock_symbol)
-
   hist = stock.history(period=f'{years_history}y')
-
+  
   dividends = stock.dividends
-
   # Convert index to datetime
-  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y-%m-%d %H:%M:%S%z'))
-
+  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d'))
+  
   results = []
 
-  # Track most recent valid dividend date
-  valid_div_date = None
+  for div_date, dividend in dividends.iterrows():
+    start_date = div_date - timedelta(days=10)
 
-  for div_date, dividend in dividends.items():
+    # Ensure start_date is a trading day
+    while start_date not in hist.index:
+      start_date -= timedelta(days=1)
 
-    if div_date not in hist.index:
-    
-      # Use most recent valid date
-      if valid_div_date is not None:
-        div_date = valid_div_date
-      
-      else:
-        continue
+    if start_date < hist.index.min():
+      start_date = hist.index.min()  
+      break
 
-    # Update most recent valid div_date
-    valid_div_date = div_date
+    opening_price = hist.loc[start_date, 'Open']
     
     price_on_dividend_date = hist.loc[div_date, 'Open']
-
-    first_date = hist.index[0]
-    start_date = max(first_date, div_date - timedelta(days=10))
-
-    # Make tz-aware
-    start_date = start_date.tz_localize('UTC')
-    div_date = div_date.tz_localize('UTC')
-
-    window_data = hist.loc[start_date:div_date + timedelta(days=90)]
-
+    
     targets = {
-      '50%': price_on_dividend_date + dividend * 0.5,
-      '75%': price_on_dividend_date + dividend * 0.75,
-      '100%': price_on_dividend_date + dividend * 1.0
+      '50%': opening_price + dividend * 0.5,
+      '75%': opening_price + dividend * 0.75,  
+      '100%': opening_price + dividend * 1.0
     }
 
     target_dates = {key: None for key in targets.keys()}
+
+    window_data = hist.loc[start_date:div_date + timedelta(days=90)]
 
     for date, row in window_data.iterrows():
       for key, target in targets.items():
@@ -62,28 +49,28 @@ def calculate(stock_symbol, proceed, years_history):
           target_dates[key] = date
 
     result_row = {
-      'Dividend Date': div_date.isoformat(),
-      'Opening Date': start_date.isoformat(),
+      'Dividend Date': div_date.strftime('%Y-%m-%d'),
+      'Opening Date': start_date.strftime('%Y-%m-%d'),
       'Price on Dividend Date': price_on_dividend_date,
+      'Opening Price': opening_price,
       '50% Target': targets['50%'],
       '75% Target': targets['75%'],
       '100% Target': targets['100%'],
-      '50% Achieved': target_dates['50%'].isoformat() if target_dates['50%'] else None,
-      '75% Achieved': target_dates['75%'].isoformat() if target_dates['75%'] else None,
-      '100% Achieved': target_dates['100%'].isoformat() if target_dates['100%'] else None,
+      '50% Achieved': target_dates['50%'].strftime('%Y-%m-%d') if target_dates['50%'] else None,
+      '75% Achieved': target_dates['75%'].strftime('%Y-%m-%d') if target_dates['75%'] else None,
+      '100% Achieved': target_dates['100%'].strftime('%Y-%m-%d') if target_dates['100%'] else None,
     }
 
     results.append(result_row)
 
   results_df = pd.DataFrame(results)
-  
   st.dataframe(results_df)
-  
+
 def main():
 
-  stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
+  stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'STOCK_SYMBOL')
 
-  years_history = st.sidebar.slider('Select number of years for history:', min_value=10, max_value=20, value=10) 
+  years_history = st.sidebar.slider('Select number of years for history:', min_value=3, max_value=20, value=3)  
 
   proceed_button = st.sidebar.button('Execute')
 
@@ -96,4 +83,4 @@ def main():
     calculate(stock_symbol, proceed, years_history)
 
 if __name__ == "__main__":
-    main()
+  main()
