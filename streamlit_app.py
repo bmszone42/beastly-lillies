@@ -20,16 +20,11 @@ def get_historical_data(symbol, years):
   data = ticker.history(start=start)
   return data
 
-
 def get_dividends(symbol):
   ticker = yf.Ticker(symbol)
   dividends = ticker.dividends
-  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y-%m-%dT%H:%M:%S%z%Z', tzinfo=pytz.timezone('America/New_York')))
-  dividends.index = dividends.index.tz_localize('UTC')
-  for dividend in dividends.index:
-    dividend = dividend.tz_convert(pytz.timezone(dividend.tzinfo))
+  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y-%m-%dT%H:%M:%S%z'))
   return dividends
-
 def calculate_target_prices(dividend, opening_price):
   targets = {
       f"{p*100}%": opening_price + dividend * p
