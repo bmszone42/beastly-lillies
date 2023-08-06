@@ -22,23 +22,17 @@ def calculate(stock_symbol, proceed, years_history):
 
   for div_date, dividend in dividends.items():
 
-    # Simpler date calculation
-    start_date = div_date - timedelta(days=10)
-
-    try:
-      opening_price = hist.loc[start_date,'Open']
-      
-    except KeyError:
-      # Decrement date if not business day
-      start_date -= timedelta(days=1)
-      opening_price = hist.loc[start_date,'Open']
+    first_date = hist.index[0]
+    start_date = max(first_date, div_date - timedelta(days=10))
+    
+    opening_price = hist.loc[start_date, 'Open']
 
     price_on_dividend_date = hist.loc[div_date, 'Open']
 
     targets = {
       '50%': opening_price + dividend * 0.5,
       '75%': opening_price + dividend * 0.75,
-      '100%': opening_price + dividend * 1.0
+      '100%': opening_price + dividend * 1.0  
     }
 
     target_dates = {key: None for key in targets.keys()}
@@ -53,12 +47,12 @@ def calculate(stock_symbol, proceed, years_history):
     result_row = {
       'Dividend Date': div_date.strftime('%Y-%m-%d'),
       'Opening Date': start_date.strftime('%Y-%m-%d'),
-      'Price on Dividend Date': price_on_dividend_date,
+      'Price on Dividend Date': price_on_dividend_date, 
       'Opening Price': opening_price,
       '50% Target': targets['50%'],
       '75% Target': targets['75%'],
       '100% Target': targets['100%'],
-      '50% Achieved': target_dates['50%'].strftime('%Y-%m-%d') if target_dates['50%'] else None,
+      '50% Achieved': target_dates['50%'].strftime('%Y-%m-%d') if target_dates['50%'] else None, 
       '75% Achieved': target_dates['75%'].strftime('%Y-%m-%d') if target_dates['75%'] else None,
       '100% Achieved': target_dates['100%'].strftime('%Y-%m-%d') if target_dates['100%'] else None,
     }
@@ -73,7 +67,7 @@ def main():
 
   stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
 
-  years_history = st.sidebar.slider('Select number of years for history:', min_value=5, max_value=20, value=10)
+  years_history = st.sidebar.slider('Select number of years for history:', min_value=10, max_value=20, value=10)
 
   proceed_button = st.sidebar.button('Execute')
 
