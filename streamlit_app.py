@@ -23,7 +23,7 @@ def get_historical_data(symbol, years):
 def get_dividends(symbol):
   ticker = yf.Ticker(symbol)
   dividends = ticker.dividends
-  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d%-H%M%S%z'))
+  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d%H%M%S%z'))
   return dividends
 
 
