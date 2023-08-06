@@ -70,20 +70,17 @@ def calculate(stock_symbol, proceed, years_history):
     st.dataframe(results_df)
 
 def main():
+    stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
+    years_history = st.sidebar.slider('Select number of years for history:', min_value=10, max_value=20, value=10)
+    proceed_button = st.sidebar.button('Execute')
 
-  stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
+    # Check if dividends are increasing over the past 10 years
+    stock = yf.Ticker(stock_symbol)
+    dividends = stock.dividends
+    proceed = dividends.is_monotonic_increasing
 
-  years_history = st.sidebar.slider('Select number of years for history:', min_value=10, max_value=20, value=10)
-
-  proceed_button = st.sidebar.button('Execute')
-
-  # Check if dividends are increasing over the past 10 years
-  stock = yf.Ticker(stock_symbol)
-  dividends = stock.dividends
-  proceed = dividends.is_monotonic_increasing
-
-  if proceed_button:
-    calculate(stock_symbol, proceed, years_history)
+    if proceed_button:
+        calculate(stock_symbol, proceed, years_history)
 
 if __name__ == "__main__":
     main()
