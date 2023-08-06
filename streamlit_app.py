@@ -77,19 +77,26 @@ def analyze_dividends(symbol, years=DEFAULT_YEARS):
 
 def main():
 
-  stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'STOCK_SYMBOL')
+  # get input values
+  symbol = st.sidebar.text_input("Symbol")
+  years = st.sidebar.slider("Years", 1, MAX_YEARS, DEFAULT_YEARS)
+  run_btn = st.sidebar.button("Analyze")
 
-  years_history = st.sidebar.slider('Select number of years for history:', min_value=3, max_value=20, value=3)  
+  if run_btn:
+    # Call analyze_dividends instead of calculate
+    results = analyze_dividends(symbol, years) 
 
-  proceed_button = st.sidebar.button('Execute')
+    # Display results
+    st.markdown("## Analysis Results")
+    st.dataframe(results)
 
-  # Check if dividends are increasing over the past 10 years
-  stock = yf.Ticker(stock_symbol)
-  dividends = stock.dividends
-  proceed = dividends.is_monotonic_increasing
+    # Metrics
+    cols = st.columns(2)
+    cols[0].metric("50% Target Met", f"{results['Percent Targets Met']['50%'].mean()*100:.1f}%")
+    cols[1].metric("Avg Days to 75% Target", f"{results['Days to Meet Targets']['75%'].mean():.1f}")
 
-  if proceed_button:
-    calculate(stock_symbol, proceed, years_history)
+    details = results[["Percent Targets Met", "Days to Meet Targets"]].describe()
+    st.dataframe(details)
 
 if __name__ == "__main__":
   main()
