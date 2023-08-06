@@ -25,7 +25,7 @@ def calculate(stock_symbol, proceed, years_history):
     first_date = hist.index[0]
     start_date = max(first_date, div_date - timedelta(days=10))
     
-    opening_price = hist.loc[start_date, 'Open']
+    #opening_price = hist.loc[start_date, 'Open']
 
    # Convert datetime to date
     div_date = div_date.date()
