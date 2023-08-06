@@ -4,4 +4,4 @@ streamlit
 matplotlib
 numpy
 plotly
-dataparser
+dateparser
