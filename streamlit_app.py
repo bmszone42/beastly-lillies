@@ -8,9 +8,9 @@ import yfinance as yf
 import streamlit as st
 
 # Constants
-DEFAULT_YEARS = 3  
+DEFAULT_YEARS = 3   
 MAX_YEARS = 20
-TARGET_PERCENTS = [0.5, 0.75, 1.0]   
+TARGET_PERCENTS = [0.5, 0.75, 1.0]  
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,9 +20,17 @@ def get_historical_data(symbol, years):
   data = ticker.history(start=start)
   return data
 
+def get_dividends(symbol):
+  """Get dividend payment history."""
+  ticker = yf.Ticker(symbol)
+  dividends = ticker.dividends  
+    
+  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y%m%d'))
+  return dividends
+
 def calculate_target_prices(dividend, opening_price):
   targets = {
-      f"{p*100}%": opening_price + dividend * p   
+      f"{p*100}%": opening_price + dividend * p    
       for p in TARGET_PERCENTS
   }
   return targets
@@ -30,7 +38,8 @@ def calculate_target_prices(dividend, opening_price):
 def find_target_dates(targets, data):
   target_dates = {p:None for p in targets.keys()}
   for date, row in data.iterrows():
-    open_price = row['Open']    
+    open_price = row['Open']
+      
     for p, target in targets.items():
       if open_price >= target and target_dates[p] is None:
         target_dates[p] = date
@@ -39,60 +48,35 @@ def find_target_dates(targets, data):
   
 def analyze_dividends(symbol, years=DEFAULT_YEARS):
   
+  # Get data
   data = get_historical_data(symbol, years)
-  dividends = get_dividends(symbol) #mocked for example
-
+  
+  # Get dividends
+  dividends = get_dividends(symbol) 
+  
   results = []
 
   for dividend_date, dividend in dividends.iteritems():
-    start_date = get_first_valid_date(dividend_date, data)
-    open_price = data.loc[start_date, 'Open']
-    price_on_dividend_date = data.loc[dividend_date, 'Open']
-
-    targets = calculate_target_prices(dividend, open_price)
-    target_dates = find_target_dates(targets, data)
-
-    pcts_met = {p: date is not None for p, date in target_dates.items()}
-    days_to_targets = {p: (target_dates[p] - dividend_date).days  
-                       for p, date in target_dates.items() if date}
-
-    result_row = {
-      "Dividend Date": dividend_date,
-      "Opening Date": start_date,
-      "Opening Price": open_price,
-      "Price on Dividend Date": price_on_dividend_date,
-      "50% Target": targets['50%'],
-      "75% Target": targets['75%'], 
-      "100% Target": targets['100%'],
-      "50% Target Date": target_dates['50%'],
-      "75% Target Date": target_dates['75%'],
-      "100% Target Date": target_dates['100%'],
-      "Percent Targets Met": pcts_met,
-      "Days to Meet Targets": days_to_targets
-    }
-
-    results.append(result_row)
-
+    # Rest of function
+  
   return pd.DataFrame(results)
 
 def main():
 
-  # get input values
+  st.title("Dividend Analysis")
+  
   symbol = st.sidebar.text_input("Symbol")
   years = st.sidebar.slider("Years", 1, MAX_YEARS, DEFAULT_YEARS)
   run_btn = st.sidebar.button("Analyze")
 
   if run_btn:
-    # Call analyze_dividends instead of calculate
-    results = analyze_dividends(symbol, years) 
+    results = analyze_dividends(symbol, years)
 
-    # Display results
-    st.markdown("## Analysis Results")
+    st.markdown("## Results")
     st.dataframe(results)
 
-    # Metrics
     cols = st.columns(2)
-    cols[0].metric("50% Target Met", f"{results['Percent Targets Met']['50%'].mean()*100:.1f}%")
+    cols[0].metric("50% Target Met", f"{results['Percent Targets Met']['50%'].mean()*100:.1f}%") 
     cols[1].metric("Avg Days to 75% Target", f"{results['Days to Meet Targets']['75%'].mean():.1f}")
 
     details = results[["Percent Targets Met", "Days to Meet Targets"]].describe()
