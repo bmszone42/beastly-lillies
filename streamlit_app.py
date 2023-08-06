@@ -2,74 +2,72 @@ import yfinance as yf
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
+import pytz
 
 def calculate(stock_symbol, proceed, years_history):
 
-  if not proceed:
-    st.warning('The stock does not have an increasing dividend over the past 10 years.')
-    return
+    if not proceed:
+        st.warning('The stock does not have an increasing dividend over the past 10 years.')
+        return
 
-  stock = yf.Ticker(stock_symbol) 
-  
-  hist = stock.history(period=f'{years_history}y')
+    stock = yf.Ticker(stock_symbol)
 
-  dividends = stock.dividends
+    hist = stock.history(period=f'{years_history}y')
 
-  # Convert index to datetime
-  dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y-%m-%d %H:%M:%S%z'))
+    dividends = stock.dividends
 
-  results = []
+    # Convert index to datetime
+    dividends.index = dividends.index.map(lambda x: datetime.strptime(str(x), '%Y-%m-%d %H:%M:%S%z'))
 
-  for div_date, dividend in dividends.items():
+    results = []
 
-    first_date = hist.index[0]
-    start_date = max(first_date, div_date - timedelta(days=10))
-    
-    #opening_price = hist.loc[start_date, 'Open']
+    for div_date, dividend in dividends.items():
 
-   # Convert datetime to date
-    div_date = div_date.date()
-    start_date = start_date.date()
-    
-    window_data = hist.loc[start_date:div_date + timedelta(days=90)]
+        first_date = hist.index[0]
+        start_date = max(first_date, div_date - timedelta(days=10))
 
-    price_on_dividend_date = hist.loc[div_date, 'Open']
+        # Convert datetime to date
+        div_date = div_date.date()
+        start_date = start_date.date()
 
-    targets = {
-      '50%': opening_price + dividend * 0.5,
-      '75%': opening_price + dividend * 0.75,
-      '100%': opening_price + dividend * 1.0
-    }
+        # Make the start_date tz-aware
+        tz = pytz.timezone('UTC')
+        start_date = tz.localize(datetime.combine(start_date, datetime.min.time()))
 
-    target_dates = {key: None for key in targets.keys()}
+        window_data = hist.loc[start_date:div_date + timedelta(days=90)]
 
-    window_data = hist.loc[start_date:div_date + timedelta(days=90)]
+        price_on_dividend_date = hist.loc[div_date, 'Open']
 
-    for date, row in window_data.iterrows():
-      for key, target in targets.items():
-        if row['Open'] >= target and target_dates[key] is None:
-          target_dates[key] = date
+        targets = {
+            '50%': price_on_dividend_date + dividend * 0.5,
+            '75%': price_on_dividend_date + dividend * 0.75,
+            '100%': price_on_dividend_date + dividend * 1.0
+        }
 
-    result_row = {
-      #'Dividend Date': div_date.strftime('%Y-%m-%d'),
-      #'Opening Date': start_date.strftime('%Y-%m-%d'),
-      'Dividend Date': div_date.isoformat(),
-      'Opening Date': start_date.isoformat(),
-      'Price on Dividend Date': price_on_dividend_date, 
-      'Opening Price': opening_price,
-      '50% Target': targets['50%'],
-      '75% Target': targets['75%'],
-      '100% Target': targets['100%'],
-      '50% Achieved': target_dates['50%'].strftime('%Y-%m-%d') if target_dates['50%'] else None, 
-      '75% Achieved': target_dates['75%'].strftime('%Y-%m-%d') if target_dates['75%'] else None,
-      '100% Achieved': target_dates['100%'].strftime('%Y-%m-%d') if target_dates['100%'] else None,
-    }
+        target_dates = {key: None for key in targets.keys()}
 
-    results.append(result_row)
+        for date, row in window_data.iterrows():
+            for key, target in targets.items():
+                if row['Open'] >= target and target_dates[key] is None:
+                    target_dates[key] = date
 
-  results_df = pd.DataFrame(results)
-  
-  st.dataframe(results_df)
+        result_row = {
+            'Dividend Date': div_date.isoformat(),
+            'Opening Date': start_date.isoformat(),
+            'Price on Dividend Date': price_on_dividend_date,
+            '50% Target': targets['50%'],
+            '75% Target': targets['75%'],
+            '100% Target': targets['100%'],
+            '50% Achieved': target_dates['50%'].isoformat() if target_dates['50%'] else None,
+            '75% Achieved': target_dates['75%'].isoformat() if target_dates['75%'] else None,
+            '100% Achieved': target_dates['100%'].isoformat() if target_dates['100%'] else None,
+        }
+
+        results.append(result_row)
+
+    results_df = pd.DataFrame(results)
+
+    st.dataframe(results_df)
 
 def main():
 
