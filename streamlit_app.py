@@ -9,7 +9,7 @@ import streamlit as st
 import dateparser
 
 # Constants
-DEFAULT_YEARS = 3
+DEFAULT_YEARS = 10
 MAX_YEARS = 20 
 TARGET_PERCENTS = [0.5, 0.75, 1.0]
 
