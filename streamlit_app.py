@@ -1,74 +1,92 @@
 import yfinance as yf
 import pandas as pd
+from datetime import datetime, timedelta
 import streamlit as st
-from datetime import timedelta
+
+def is_increasing(series):
+    return all(x < y for x, y in zip(series, series[1:]))
 
 def calculate(stock_symbol, proceed, years_history):
-    if not proceed:
-        st.warning('The stock does not have an increasing dividend over the past 10 years.')
-        return
-
     stock = yf.Ticker(stock_symbol)
     hist = stock.history(period=f'{years_history}y')
-    dividends = stock.dividends
 
-    # Ensure dividends are in ascending order
-    dividends = dividends.sort_index(ascending=True)
+    hist.index = hist.index.tz_localize(None)
 
-    results = []
+    st.write('Historical data:')
+    st.dataframe(hist)
 
-    for div_date, dividend in dividends.items():
-        start_date = div_date - timedelta(days=10)
-        # Ensure start_date is a trading day
-        while start_date not in hist.index:
-            start_date -= timedelta(days=1)
-            if start_date < hist.index.min():
-                start_date = hist.index.min()
-                break
+    dividends = hist[hist['Dividends'] > 0]['Dividends'].resample('Y').sum()
 
-        opening_price = hist.loc[start_date, 'Open']
-        targets = {
-            '50%': opening_price + dividend * 0.5,
-            '75%': opening_price + dividend * 0.75,
-            '100%': opening_price + dividend * 1.0
-        }
+    st.write('Yearly dividends:')
+    st.dataframe(dividends)
+
+    if not is_increasing(dividends) and proceed == 'No':
+        st.write(f"The dividends of {stock_symbol} have not been consistently increasing over the past {years_history} years.")
+    else:
+        st.write(f"Calculating for {stock_symbol}...")
         
-        target_dates = {key: None for key in targets.keys()}
-        
-        window_data = hist.loc[start_date:div_date + timedelta(days=90)]
-        
-        for date, row in window_data.iterrows():
-            for key, target in targets.items():
-                if row['Open'] >= target and target_dates[key] is None:
-                    target_dates[key] = date
+        dividend_dates = hist[hist['Dividends'] > 0].index
 
-        result_row = {
-            'Dividend Date': div_date,
-            'Opening Price': opening_price,
-            '50% Target': targets['50%'],
-            '75% Target': targets['75%'],
-            '100% Target': targets['100%'],
-            '50% Achieved': target_dates['50%'],
-            '75% Achieved': target_dates['75%'],
-            '100% Achieved': target_dates['100%'],
-        }
-        results.append(result_row)
+        results = []
+        for div_date in dividend_dates:
+            start_date = div_date - timedelta(days=10)
+            trading_start_date = start_date
+            while start_date not in hist.index:
+                start_date -= timedelta(days=1)
 
-    results_df = pd.DataFrame(results)
-    st.dataframe(results_df)
+            trading_start_date_price = hist.loc[start_date, 'Close']
+            
+            end_date = div_date + timedelta(days=90)
+            window_data = hist.loc[start_date:end_date]
+
+            st.write(f'Data for window from {start_date} to {end_date}:')
+            st.dataframe(window_data)
+
+            if div_date in hist.index:
+                dividend = hist.loc[div_date, 'Dividends']
+                opening_price = hist.loc[start_date, 'Open']
+
+                targets = [opening_price * (1 + x) for x in [0.5, 0.75, 1.0]]
+                div_date_price = hist.loc[div_date, 'Close']
+
+                target_days = {}
+                target_prices = {}
+                target_dates = {}
+
+                for i, target in enumerate(targets):
+                    target_day = window_data[window_data['Close'] >= target].index.min()
+                    if pd.notna(target_day):
+                        target_days[f"{50*(i+1)}%_target_days"] = (target_day - start_date).days
+                        target_prices[f"{50*(i+1)}%_target_price"] = window_data.loc[target_day, 'Close']
+                        target_dates[f"{50*(i+1)}%_target_date"] = target_day
+
+                if target_days.values():
+                    average_days = sum(target_days.values()) / len(target_days.values())
+                else:
+                    average_days = None
+
+                result = {
+                    'div_date': div_date,
+                    'div_date_price': div_date_price,
+                    '10_days_before_div_date': trading_start_date,
+                    '10_days_before_div_date_price': trading_start_date_price,
+                    'average_days_to_reach_target': average_days
+                }
+                result.update(target_days)
+                result.update(target_prices)
+                result.update(target_dates)
+                results.append(result)
+
+        results_df = pd.DataFrame(results)
+        st.write('Results:')
+        st.dataframe(results_df)
 
 def main():
-    stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
-    years_history = st.sidebar.slider('Select number of years for history:', min_value=3, max_value=20, value=3)
-    proceed_button = st.sidebar.button('Execute')
+    stock_symbol = st.sidebar.text_input("Enter stock symbol", 'AAPL')
+    proceed = st.sidebar.selectbox("Proceed if dividends are not increasing?", ('Yes', 'No'))
+    years_history = st.sidebar.slider("Select range for historical data (years)", 1, 20, 10)
 
-    # Check if dividends are increasing over the past 10 years
-    stock = yf.Ticker(stock_symbol)
-    dividends = stock.dividends
-    proceed = dividends.is_monotonic_increasing
-
-    if proceed_button:
-        calculate(stock_symbol, proceed, years_history)
+    calculate(stock_symbol, proceed, years_history)
 
 if __name__ == "__main__":
     main()
