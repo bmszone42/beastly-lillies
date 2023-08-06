@@ -6,7 +6,7 @@ import pytz
 import pandas as pd
 import yfinance as yf
 import streamlit as st
-
+import dateparser
 
 # Constants
 DEFAULT_YEARS = 3
