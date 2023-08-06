@@ -33,7 +33,11 @@ def calculate(stock_symbol, proceed, years_history):
     # Get first date
     start_date = dates[0]
 
-    opening_price = hist.loc[start_date, 'Open']
+    try:
+      opening_price = hist.loc[start_date,'Open'] 
+    except KeyError:
+      start_date = hist.index[0]
+  #opening_price = hist.loc[start_date,'Open']
     
     price_on_dividend_date = hist.loc[div_date, 'Open']
 
