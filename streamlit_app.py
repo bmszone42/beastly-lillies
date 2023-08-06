@@ -1,8 +1,7 @@
 import yfinance as yf
 import pandas as pd
 import streamlit as st
-from datetime import datetime, timedelta  
-import numpy as np
+from datetime import datetime, timedelta
 
 def calculate(stock_symbol, proceed, years_history):
 
@@ -11,6 +10,7 @@ def calculate(stock_symbol, proceed, years_history):
     return
 
   stock = yf.Ticker(stock_symbol)
+  
   hist = stock.history(period=f'{years_history}y')
 
   dividends = stock.dividends
@@ -20,28 +20,19 @@ def calculate(stock_symbol, proceed, years_history):
 
   results = []
 
-  # Set minimum days before dividend
-  min_days_before = 10
-
-  # Initialize opening price 
-  opening_price = None
-
   for div_date, dividend in dividends.items():
 
-     # Get date range
-    days_before = 10
-    
-    dates = pd.date_range(end=div_date, periods=days_before+1, freq='B')
-    
-    # Get first date
-    start_date = dates[0]
+    # Simpler date calculation
+    start_date = div_date - timedelta(days=10)
 
     try:
-      opening_price = hist.loc[start_date,'Open'] 
+      opening_price = hist.loc[start_date,'Open']
+      
     except KeyError:
-      start_date = hist.index[0]
-  #opening_price = hist.loc[start_date,'Open']
-    
+      # Decrement date if not business day
+      start_date -= timedelta(days=1)
+      opening_price = hist.loc[start_date,'Open']
+
     price_on_dividend_date = hist.loc[div_date, 'Open']
 
     targets = {
@@ -95,4 +86,4 @@ def main():
     calculate(stock_symbol, proceed, years_history)
 
 if __name__ == "__main__":
-  main()
+    main()
