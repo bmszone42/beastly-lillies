@@ -51,8 +51,10 @@ def calculate(stock_symbol, proceed, years_history):
           target_dates[key] = date
 
     result_row = {
-      'Dividend Date': div_date.strftime('%Y-%m-%d'),
-      'Opening Date': start_date.strftime('%Y-%m-%d'),
+      #'Dividend Date': div_date.strftime('%Y-%m-%d'),
+      #'Opening Date': start_date.strftime('%Y-%m-%d'),
+      'Dividend Date': div_date.isoformat(),
+      'Opening Date': start_date.isoformat(),
       'Price on Dividend Date': price_on_dividend_date, 
       'Opening Price': opening_price,
       '50% Target': targets['50%'],
