@@ -1,8 +1,8 @@
 import yfinance as yf
-import pandas as pd
+import pandas as pd 
 import streamlit as st
-from datetime import datetime  
-from pandas.tseries.offsets import BDay
+from datetime import datetime
+from pandas.tseries.offsets import BusinessDay
 
 def calculate(stock_symbol, proceed, years_history):
 
@@ -22,17 +22,28 @@ def calculate(stock_symbol, proceed, years_history):
 
   for div_date, dividend in dividends.items():
 
-    # Use BDay offset to get trading day 10 days before dividend
-    start_date = div_date - BDay(10)
+    # Try up to 10 days before dividend
+    for i in range(1,11):
+      start_date = div_date - BusinessDay(i)
     
-    opening_price = hist.loc[start_date, 'Open']
+      try:
+        opening_price = hist.loc[start_date, 'Open']
+        break
+        
+      except KeyError:
+        continue  
+        
+    # Default to first date if no match       
+    if 'opening_price' not in locals():
+      start_date = hist.index[0]
+      opening_price = hist.loc[start_date, 'Open']
 
     price_on_dividend_date = hist.loc[div_date, 'Open']
 
     targets = {
       '50%': opening_price + dividend * 0.5,
       '75%': opening_price + dividend * 0.75,
-      '100%': opening_price + dividend * 1.0  
+      '100%': opening_price + dividend * 1.0
     }
 
     target_dates = {key: None for key in targets.keys()}
@@ -51,9 +62,9 @@ def calculate(stock_symbol, proceed, years_history):
       'Opening Price': opening_price,
       '50% Target': targets['50%'],
       '75% Target': targets['75%'],
-      '100% Target': targets['100%'],  
+      '100% Target': targets['100%'],
       '50% Achieved': target_dates['50%'].strftime('%Y-%m-%d') if target_dates['50%'] else None,
-      '75% Achieved': target_dates['75%'].strftime('%Y-%m-%d') if target_dates['75%'] else None,
+      '75% Achieved': target_dates['75%'].strftime('%Y-%m-%d') if target_dates['75%'] else None,  
       '100% Achieved': target_dates['100%'].strftime('%Y-%m-%d') if target_dates['100%'] else None,
     }
 
@@ -67,7 +78,7 @@ def main():
 
   stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
 
-  years_history = st.sidebar.slider('Select number of years for history:', min_value=5, max_value=20, value=10)   
+  years_history = st.sidebar.slider('Select number of years for history:', min_value=5, max_value=20, value=10)
 
   proceed_button = st.sidebar.button('Execute')
 
