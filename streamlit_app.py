@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd 
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timedelta
 from pandas.tseries.offsets import BusinessDay
 
 def calculate(stock_symbol, proceed, years_history):
