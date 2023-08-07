@@ -52,9 +52,11 @@ def calculate_metrics(historical_data):
                 
 # Streamlit interface
 def build_sidebar():
-    st.sidebar.text_input('Enter stock symbol:', 'AAPL')
-    st.sidebar.slider('Select number of years:', min_value=10, max_value=20, value=10)
+    symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL') 
+    years = st.sidebar.slider('Select number of years:', min_value=10, max_value=20, value=10)
     st.sidebar.button('Execute')
+    
+    return symbol, years
 
 def show_results(dividend_df, avg_days_df):
     st.header('Dividend Data')
@@ -64,12 +66,12 @@ def show_results(dividend_df, avg_days_df):
     st.write(avg_days_df)
     
 def main():
-    
+
     # Build sidebar
-    symbol = build_sidebar()
-    
+    symbol, years = build_sidebar()
+
     # Get data
-    historical_data = get_historical_data(symbol, 10)
+    historical_data = get_historical_data(symbol, years)
     
     # Calculate metrics
     dividend_df, avg_days_df = calculate_metrics(historical_data)
