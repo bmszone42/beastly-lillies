@@ -47,17 +47,15 @@ def calculate(stock_symbol, years_history):
                 dividend_dates_data.append({
                     'Dividend Date': date.strftime('%Y-%m-%d'),
                     'Dividend Amount': dividend,
-                    'Price on Dividend Date': hist.loc[date, 'Close'] if date in hist.index else 'Data Not Available',
+                    'Price on Dividend Date': hist.loc[date, 'Close'],
                     '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
-                    'Opening Price -10 Days': prev_price if prev_date in hist.index else 'Data Not Available',
+                    'Opening Price -10 Days': prev_price,
                     '+60 Days Date': next_date.strftime('%Y-%m-%d'),
-                    'Opening Price +60 Days': next_price if next_date in hist.index else 'Data Not Available',
+                    'Opening Price +60 Days': next_price,
                     '% Increase': round(percentage_increase, 1),
                     'Target': target,
                     'Date Used for Target': prev_date.strftime('%Y-%m-%d')
                 })
-            else:
-                st.warning(f"Data not available for dividend date: {date.strftime('%Y-%m-%d')}")
         except KeyError:
             continue
 
