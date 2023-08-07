@@ -11,8 +11,12 @@ def calculate(stock_symbol, proceed, years_history):
     stock = yf.Ticker(stock_symbol)
 
     hist = stock.history(period=f'{years_history}y')
+    st.write('History data')
+    st.write(hist.head())
 
     dividends = stock.dividends
+    st.write('Dividend data')
+    st.write(dividends.head())
 
     # Convert index to datetime and ensure they have the same datetime format
     dividends.index = pd.to_datetime(dividends.index)
