@@ -3,8 +3,6 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 
-
-@st.cache_data
 def calculate(stock_symbol, years_history):
 
     stock = yf.Ticker(stock_symbol)
@@ -49,16 +47,19 @@ def calculate(stock_symbol, years_history):
     # Create the dividend_dates DataFrame
     dividend_dates = pd.DataFrame(dividend_dates_data)
 
-    # Display the dividend_dates DataFrame with rounded values
+    # Display the title and the dividend_dates DataFrame with rounded values
+    st.write("# Dividend Calculation Data")
     st.write("Dividend Dates with Prices -10 and +60 Days and % Increase:")
     st.write(dividend_dates.round({'Dividend Amount': 2, 'Price on Dividend Date': 2,
                                    'Price -10 Days': 2, 'Price +60 Days': 2}))
 
 def main():
-    stock_symbol = 'AAPL'
-    years_history = 10
+    stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
+    years_history = st.sidebar.slider('Select number of years for history:', min_value=1, max_value=20, value=10)
+    execute_button = st.sidebar.button('Execute')
 
-    calculate(stock_symbol, years_history)
+    if execute_button:
+        calculate(stock_symbol, years_history)
 
 if __name__ == "__main__":
     main()
