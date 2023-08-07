@@ -34,6 +34,9 @@ def calculate(stock_symbol, years_history):
                     # Calculate the target (dividend + opening price on -10 days)
                     target = dividend + prev_price
 
+                    # Calculate the number of days for the opening price to be greater than the target price
+                    days_to_target = ((hist.loc[next_date:, 'Open'] >= target).idxmax() - next_date).days
+
                     dividend_dates_data.append({
                         'Dividend Date': date.strftime('%Y-%m-%d'),
                         'Month': date.month,
@@ -45,7 +48,8 @@ def calculate(stock_symbol, years_history):
                         'Opening Price +60 Days': next_price,
                         '% Increase': round(percentage_increase, 1),
                         'Target': target,
-                        'Date Used for Target': prev_date.strftime('%Y-%m-%d')
+                        'Date Used for Target': prev_date.strftime('%Y-%m-%d'),
+                        'Days to Opening Price > Target': days_to_target
                     })
             except KeyError:
                 continue
