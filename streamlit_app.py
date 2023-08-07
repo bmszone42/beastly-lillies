@@ -1,95 +1,75 @@
-"""Streamlit app to analyze stock dividend performance."""
-from datetime import datetime, timedelta   
-import logging
-import pytz
-import pandas as pd   
 import yfinance as yf
+import pandas as pd
 import streamlit as st
-import dateparser
-# Constants   
-DEFAULT_YEARS = 3
-MAX_YEARS = 20   
-TARGET_PERCENTS = [0.5, 0.75, 1.0]  
-logging.basicConfig(level=logging.INFO)
-def get_historical_data(symbol, years):
-  ticker = yf.Ticker(symbol)
-  start = datetime.now() - timedelta(days=365*years)
-  data = ticker.history(start=start)
-  return data   
-def get_dividends(symbol):
-  dividends = yf.Ticker(symbol).dividends
-  print(dividends.index)
-  return dividends
-def calculate_target_prices(dividend, opening_price):
-  targets = {
-    f"{p*100}%": opening_price + dividend * p
-    for p in TARGET_PERCENTS
-  }
-  return targets    
-def get_first_valid_date(dividend_date, data):
-  days_back = 10
-  while days_back > 0:
-    date = dividend_date - timedelta(days=days_back)
-    if data.loc[date, 'Open'] is not None:
-      if is_business_day(date):        
-        return date        
-      days_back -= 1
-  return None   
-  
-def is_business_day(date):
-  return date.weekday() < 5
-  
-def analyze_dividends(symbol, years=DEFAULT_YEARS):
-  data = get_historical_data(symbol, years)
-  dividends = get_dividends(symbol)
-  print(f"Data date range: {data.index.min()} to {data.index.max()}")
-  results = []
-  for dividend_date, dividend in dividends.iteritems():
-    start_date = get_first_valid_date(dividend_date, data)   
-    open_price = data.loc[start_date, 'Open']
-    price_on_dividend_date = data.loc[dividend_date, 'Open']       
-      targets = calculate_target_prices(dividend, open_price)
-    target_dates = find_target_dates(targets, data)
-    pcts_met = {p: date is not None for p, date in target_dates.items()}
-    days_to_targets = {p: (target_dates[p] - dividend_date).days
-                          for p, date in target_dates.items() if date}
-    result_row = {      
-      "Dividend Date": dividend_date,
-      "Opening Date": start_date,
-      "Opening Price": open_price,
-       
-        "Price on Dividend Date": price_on_dividend_date,
-       
-        "50% Target": targets['50%'],
-       
-        "75% Target": targets['75%'],
-         
-        "100% Target": targets['100%'],
-      "50% Target Date": target_dates['50%'],
-      "75% Target Date": target_dates['75%'],
-      "100% Target Date": target_dates['100%'],
-         
-        "Percent Targets Met": pcts_met,
-      "Days to Meet Targets": days_to_targets
-    }
-    results.append(result_row)
-  return pd.DataFrame(results)   
+from datetime import datetime, timedelta
+import pytz
+
+def calculate(stock_symbol, proceed, years_history):
+
+    if not proceed:
+        st.warning('The stock does not have an increasing dividend over the past 10 years.')
+        return
+
+    stock = yf.Ticker(stock_symbol)
+
+    hist = stock.history(period=f'{years_history}y')
+
+    dividends = stock.dividends
+
+    # Convert index to datetime and ensure they have the same datetime format
+    dividends.index = pd.to_datetime(dividends.index)
+    hist.index = pd.to_datetime(hist.index)
+
+    # Localize tz-naive datetime objects to UTC timezone
+    tz = pytz.timezone('UTC')
+    dividends.index = dividends.index.tz_localize(tz)
+    hist.index = hist.index.tz_localize(tz)
+
+    # Create a new DataFrame 'combined' to store dividend dates, closing prices, and prices -10 and +60 days from dividends
+    combined_data = []
+    for div_date, dividend in dividends.items():
+        try:
+            # Get closing price on dividend date
+            price_on_dividend_date = hist.loc[div_date, 'Close']
+
+            # Calculate dates -10 and +60 days from the dividend date
+            prev_date = div_date - timedelta(days=10)
+            next_date = div_date + timedelta(days=60)
+
+            # Check if the -10 and +60 days dates are business days and get their closing prices
+            prev_price = hist.loc[prev_date, 'Close'] if prev_date in hist.index else 'Not a Business Day'
+            next_price = hist.loc[next_date, 'Close'] if next_date in hist.index else 'Not a Business Day'
+
+            combined_data.append({
+                'Dividend Date': div_date,
+                'Dividend Amount': dividend,
+                'Price on Dividend Date': price_on_dividend_date,
+                '-10 Days Date': prev_date,
+                'Price -10 Days': prev_price,
+                '+60 Days Date': next_date,
+                'Price +60 Days': next_price
+            })
+        except KeyError:
+            continue
+
+    combined = pd.DataFrame(combined_data)
+
+    # Display the combined DataFrame
+    st.write("Combined Data:")
+    st.dataframe(combined)
+
 def main():
-  st.title("Dividend Analysis")
-  symbol = st.sidebar.text_input("Symbol", "AAPL")
-  years = st.sidebar.slider("Years", 10, MAX_YEARS, DEFAULT_YEARS)
-  run_btn = st.sidebar.button("Analyze")
-  if run_btn:
-    results = analyze_dividends(symbol, years)
-    st.markdown("## Results")  
-    st.dataframe(results)
-    st.markdown("## Dividends Data")
-    dividends = get_dividends(symbol)
-    st.dataframe(dividends)
-    cols = st.columns(2)
-    cols[0].metric("50% Target Met", f"{results['Percent Targets Met']['50%'].mean()*100:.1f}%")
-    cols[1].metric("Avg Days to 75% Target", f"{results['Days to Meet Targets']['75%'].mean():.1f}")         
-    details = results[["Percent Targets Met", "Days to Meet Targets"]].describe()
-    st.dataframe(details)
-if __name__ == "__main__":       
-   main()
+    stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
+    years_history = st.sidebar.slider('Select number of years for history:', min_value=10, max_value=20, value=10)
+    proceed_button = st.sidebar.button('Execute')
+
+    # Check if dividends are increasing over the past 10 years
+    stock = yf.Ticker(stock_symbol)
+    dividends = stock.dividends
+    proceed = dividends.is_monotonic_increasing
+
+    if proceed_button:
+        calculate(stock_symbol, proceed, years_history)
+
+if __name__ == "__main__":
+    main()
