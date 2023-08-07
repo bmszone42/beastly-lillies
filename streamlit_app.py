@@ -43,7 +43,8 @@ def calculate(stock_symbol, years_history):
                         '+60 Days Date': next_date.strftime('%Y-%m-%d'),
                         'Opening Price +60 Days': next_price,
                         '% Increase': round(percentage_increase, 1),
-                        'Target': target
+                        'Target': target,
+                        'Date Used for Target': prev_date.strftime('%Y-%m-%d')
                     })
             except KeyError:
                 continue
