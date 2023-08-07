@@ -3,6 +3,8 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 
+
+@st.cache_data
 def calculate(stock_symbol, years_history):
 
     stock = yf.Ticker(stock_symbol)
