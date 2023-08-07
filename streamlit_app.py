@@ -14,51 +14,45 @@ def calculate(stock_symbol, years_history):
     # Convert index to datetime and ensure they have the same datetime format
     hist.index = pd.to_datetime(hist.index)
 
-    # Create a list of target months (1 to 12)
-    target_months = list(range(1, 13))
-
     # Create a new DataFrame 'dividend_dates' to store dividend dates, -10 days dates, and +60 days dates
     dividend_dates_data = []
-    for month in target_months:
-        try:
-            # Get the closest dividend date to the target month
-            closest_date = hist.loc[hist.index.month == month, 'Dividends'].idxmax()
-            dividend = hist.loc[closest_date, 'Dividends']
+    for date, dividend in zip(hist.index, hist['Dividends']):
+        if dividend > 0:
+            try:
+                # Calculate dates -10 and +60 days from the dividend date
+                prev_date = date - timedelta(days=10)
+                next_date = date + timedelta(days=60)
 
-            # Calculate dates -10 and +60 days from the dividend date
-            prev_date = closest_date - timedelta(days=10)
-            next_date = closest_date + timedelta(days=60)
+                # Check if the -10 and +60 days dates are business days and add them to the DataFrame
+                if prev_date in hist.index and next_date in hist.index:
+                    prev_price = hist.loc[prev_date, 'Open']
+                    next_price = hist.loc[next_date, 'Open']
 
-            # Check if the -10 and +60 days dates are business days and add them to the DataFrame
-            if prev_date in hist.index and next_date in hist.index:
-                prev_price = hist.loc[prev_date, 'Open']
-                next_price = hist.loc[next_date, 'Open']
+                    # Calculate percentage increase
+                    percentage_increase = ((next_price - prev_price) / prev_price) * 100
 
-                # Calculate percentage increase
-                percentage_increase = ((next_price - prev_price) / prev_price) * 100
+                    # Calculate the target (dividend + opening price on -10 days)
+                    target = dividend + prev_price
 
-                # Calculate the target (dividend + opening price on -10 days)
-                target = dividend + prev_price
+                    # Calculate the number of days for the opening price to be greater than the target price
+                    days_to_target = ((hist.loc[next_date:, 'Open'] >= target).idxmax() - next_date).days
 
-                # Calculate the number of days for the opening price to be greater than the target price
-                days_to_target = ((hist.loc[next_date:, 'Open'] >= target).idxmax() - next_date).days
-
-                dividend_dates_data.append({
-                    'Dividend Date': closest_date.strftime('%Y-%m-%d'),
-                    'Month': month,
-                    'Dividend Amount': dividend,
-                    'Price on Dividend Date': hist.loc[closest_date, 'Close'],
-                    '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
-                    'Opening Price -10 Days': prev_price,
-                    '+60 Days Date': next_date.strftime('%Y-%m-%d'),
-                    'Opening Price +60 Days': next_price,
-                    '% Increase': round(percentage_increase, 1),
-                    'Target': target,
-                    'Date Used for Target': prev_date.strftime('%Y-%m-%d'),
-                    'Days to Opening Price > Target': days_to_target
-                })
-        except ValueError:
-            continue
+                    dividend_dates_data.append({
+                        'Dividend Date': date.strftime('%Y-%m-%d'),
+                        'Month': date.month,
+                        'Dividend Amount': dividend,
+                        'Price on Dividend Date': hist.loc[date, 'Close'],
+                        '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
+                        'Opening Price -10 Days': prev_price,
+                        '+60 Days Date': next_date.strftime('%Y-%m-%d'),
+                        'Opening Price +60 Days': next_price,
+                        '% Increase': round(percentage_increase, 1),
+                        'Target': target,
+                        'Date Used for Target': prev_date.strftime('%Y-%m-%d'),
+                        'Days to Opening Price > Target': days_to_target
+                    })
+            except KeyError:
+                continue
 
     # Create the dividend_dates DataFrame and sort it by 'Month' and 'Dividend Date' in descending order
     dividend_dates = pd.DataFrame(dividend_dates_data)
@@ -91,7 +85,7 @@ def calculate(stock_symbol, years_history):
 
 def main():
     stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
-    years_history = st.sidebar.slider('Select number of years for history:', min_value=1, max_value=20, value=10)
+    years_history = st.sidebar.slider('Select number of years for history:', min_value=, max_value=20, value=10)
     execute_button = st.sidebar.button('Execute')
 
     if execute_button:
