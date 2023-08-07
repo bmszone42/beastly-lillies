@@ -26,11 +26,11 @@ def calculate(stock_symbol, years_history):
                 # Check if the -10 and +60 days dates are business days and add them to the DataFrame
                 if prev_date in hist.index and next_date in hist.index:
                     dividend_dates_data.append({
-                        'Dividend Date': date,
+                        'Dividend Date': date.strftime('%Y-%m-%d'),
                         'Price on Dividend Date': hist.loc[date, 'Close'],
-                        '-10 Days Date': prev_date,
+                        '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
                         'Price -10 Days': hist.loc[prev_date, 'Close'],
-                        '+60 Days Date': next_date,
+                        '+60 Days Date': next_date.strftime('%Y-%m-%d'),
                         'Price +60 Days': hist.loc[next_date, 'Close']
                     })
             except KeyError:
