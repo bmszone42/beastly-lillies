@@ -33,8 +33,8 @@ def calculate(stock_symbol, proceed, years_history):
             price_on_dividend_date = hist.loc[div_date, 'Close']
 
             # Calculate dates -10 and +60 days from the dividend date
-            prev_date = div_date - timedelta(days=10)
-            next_date = div_date + timedelta(days=60)
+            prev_date = div_date - timedelta(days=12)
+            next_date = div_date + timedelta(days=62)
 
             # Check if the -10 and +60 days dates are business days and get their closing prices
             prev_price = hist.loc[prev_date, 'Close'] if prev_date in hist.index else 'Not a Business Day'
