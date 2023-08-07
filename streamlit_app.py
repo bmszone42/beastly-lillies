@@ -3,81 +3,93 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 
-# Function to get historical data
-def get_historical_data(symbol, years):
-    ticker = yf.Ticker(symbol) 
-    return ticker.history(period=f'{years}y')
+def calculate(stock_symbol, years_history):
 
-# Function to calculate metrics
-def calculate_metrics(historical_data):
-    
-    # Extract dividend info 
-    dividend_data = []
-    for date, dividend in zip(historical_data.index, historical_data['Dividends']):
+    stock = yf.Ticker(stock_symbol)
+
+    hist = stock.history(period=f'{years_history}y')
+    st.write('History data')
+    st.write(hist.head())
+
+    # Convert index to datetime and ensure they have the same datetime format
+    hist.index = pd.to_datetime(hist.index)
+
+    # Create a new DataFrame 'dividend_dates' to store dividend dates, -10 days dates, and +60 days dates
+    dividend_dates_data = []
+    for date, dividend in zip(hist.index, hist['Dividends']):
         if dividend > 0:
-            # Calculate dates and prices
-            prev_date = date - timedelta(days=10)
-            next_date = date + timedelta(days=60)
-            prev_price = historical_data.loc[prev_date, 'Open']
-            next_price = historical_data.loc[next_date, 'Open']
-            
-            # Calculate metrics
-            percentage_increase = ((next_price - prev_price) / prev_price) * 100
-            target = dividend + prev_price
-            days_to_target = ((historical_data.loc[next_date:, 'Open'] >= target).idxmax() - next_date).days
-            
-            # Append to dividend data
-            dividend_data.append({
-                'dividend_date': date.strftime('%Y-%m-%d'), 
-                'month': date.month,
-                'dividend_amount': dividend,
-                'price_on_dividend_date': historical_data.loc[date, 'Close'],
-                'prev_date': prev_date.strftime('%Y-%m-%d'),
-                'prev_price': prev_price,
-                'next_date': next_date.strftime('%Y-%m-%d'),
-                'next_price': next_price,   
-                'percent_increase': round(percentage_increase, 1),
-                'target': target,
-                'days_to_target': days_to_target
+            try:
+                # Calculate dates -10 and +60 days from the dividend date
+                prev_date = date - timedelta(days=10)
+                next_date = date + timedelta(days=60)
+
+                # Check if the -10 and +60 days dates are business days and add them to the DataFrame
+                if prev_date in hist.index and next_date in hist.index:
+                    prev_price = hist.loc[prev_date, 'Open']
+                    next_price = hist.loc[next_date, 'Open']
+
+                    # Calculate percentage increase
+                    percentage_increase = ((next_price - prev_price) / prev_price) * 100
+
+                    # Calculate the target (dividend + opening price on -10 days)
+                    target = dividend + prev_price
+
+                    # Calculate the number of days for the opening price to be greater than the target price
+                    days_to_target = ((hist.loc[next_date:, 'Open'] >= target).idxmax() - next_date).days
+
+                    dividend_dates_data.append({
+                        'Dividend Date': date.strftime('%Y-%m-%d'),
+                        'Month': date.month,
+                        'Dividend Amount': dividend,
+                        'Price on Dividend Date': hist.loc[date, 'Close'],
+                        '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
+                        'Opening Price -10 Days': prev_price,
+                        '+60 Days Date': next_date.strftime('%Y-%m-%d'),
+                        'Opening Price +60 Days': next_price,
+                        '% Increase': round(percentage_increase, 1),
+                        'Target': target,
+                        'Date Used for Target': prev_date.strftime('%Y-%m-%d'),
+                        'Days to Opening Price > Target': days_to_target
+                    })
+            except KeyError:
+                continue
+
+    # Create the dividend_dates DataFrame and sort it by 'Month' and 'Dividend Date' in descending order
+    dividend_dates = pd.DataFrame(dividend_dates_data)
+    dividend_dates.sort_values(by=['Month', 'Dividend Date'], ascending=[True, False], inplace=True)
+
+    # Display the title and the dividend_dates DataFrame with rounded values
+    st.write("# Dividend Calculation Data")
+    st.write("Dividend Dates with Prices -10 and +60 Days, Targets, and % Increase:")
+    st.write(dividend_dates.round({'Dividend Amount': 2, 'Price on Dividend Date': 2,
+                                   'Opening Price -10 Days': 2, 'Opening Price +60 Days': 2, 'Target': 2}))
+
+    # Calculate average days for each 10-year period with dividends in the same month
+    avg_days_data = []
+    for month in dividend_dates['Month'].unique():
+        df_month = dividend_dates[dividend_dates['Month'] == month]
+        for i in range(0, len(df_month), 10):
+            df_period = df_month.iloc[i:i + 10]
+            avg_days = df_period['Days to Opening Price > Target'].mean()
+            avg_days_data.append({
+                'Month': month,
+                'Average Days to Opening Price > Target': avg_days
             })
-            
-    # Create dataframe        
-    dividend_df = pd.DataFrame(dividend_data)
-    
-    # Groupby and aggregate        
-    avg_days_df = dividend_df.groupby('month')[['days_to_target']].mean().reset_index()
 
-    return dividend_df, avg_days_df
-    
-                
-# Streamlit interface
-def build_sidebar():
-    symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL') 
-    years = st.sidebar.slider('Select number of years:', min_value=10, max_value=20, value=10)
-    st.sidebar.button('Execute')
-    
-    return symbol, years
+    # Create the average_days DataFrame
+    average_days = pd.DataFrame(avg_days_data)
 
-def show_results(dividend_df, avg_days_df):
-    st.header('Dividend Data')
-    st.write(dividend_df)
-    
-    st.header('Average Days to Target')
-    st.write(avg_days_df)
-    
+    # Display the average_days DataFrame
+    st.write("# Average Days to Opening Price > Target for Each 10-Year Period")
+    st.write(average_days)
+
 def main():
+    stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
+    years_history = st.sidebar.slider('Select number of years for history:', min_value=10, max_value=20, value=10)
+    execute_button = st.sidebar.button('Execute')
 
-    # Build sidebar
-    symbol, years = build_sidebar()
+    if execute_button:
+        calculate(stock_symbol, years_history)
 
-    # Get data
-    historical_data = get_historical_data(symbol, years)
-    
-    # Calculate metrics
-    dividend_df, avg_days_df = calculate_metrics(historical_data)
-
-    # Display results 
-    show_results(dividend_df, avg_days_df)
-    
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
