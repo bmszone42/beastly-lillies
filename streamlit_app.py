@@ -36,6 +36,7 @@ def calculate(stock_symbol, years_history):
 
                     dividend_dates_data.append({
                         'Dividend Date': date.strftime('%Y-%m-%d'),
+                        'Month': date.month,
                         'Dividend Amount': dividend,
                         'Price on Dividend Date': hist.loc[date, 'Close'],
                         '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
@@ -49,9 +50,9 @@ def calculate(stock_symbol, years_history):
             except KeyError:
                 continue
 
-    # Create the dividend_dates DataFrame and sort it by 'Dividend Date' in descending order
+    # Create the dividend_dates DataFrame and sort it by 'Month' and 'Dividend Date' in descending order
     dividend_dates = pd.DataFrame(dividend_dates_data)
-    dividend_dates.sort_values(by='Dividend Date', ascending=False, inplace=True)
+    dividend_dates.sort_values(by=['Month', 'Dividend Date'], ascending=[True, False], inplace=True)
 
     # Display the title and the dividend_dates DataFrame with rounded values
     st.write("# Dividend Calculation Data")
