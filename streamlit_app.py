@@ -85,7 +85,7 @@ def calculate(stock_symbol, years_history):
 
 def main():
     stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
-    years_history = st.sidebar.slider('Select number of years for history:', min_value=1, max_value=20, value=10)
+    years_history = st.sidebar.slider('Select number of years for history:', min_value=10, max_value=20, value=10)
     execute_button = st.sidebar.button('Execute')
 
     if execute_button:
