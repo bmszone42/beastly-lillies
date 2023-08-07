@@ -1,104 +1,70 @@
 import yfinance as yf
 import pandas as pd
-import streamlit as st
 from datetime import datetime, timedelta
-import pytz
 
 def calculate(stock_symbol, proceed, years_history):
 
     if not proceed:
-        st.warning('The stock does not have an increasing dividend over the past 10 years.')
+        print('The stock does not have an increasing dividend over the past 10 years.')
         return
 
     stock = yf.Ticker(stock_symbol)
 
     hist = stock.history(period=f'{years_history}y')
-    # Display the DataFrames for error-checking
-    st.write("Historical Data:")
-    st.dataframe(hist)
+    st.write('History data')
+    st.write(hist.head())
 
     dividends = stock.dividends
-    
-    st.write("Dividends Data:")
-    st.dataframe(dividends)
+    st.write('Dividend data')
+    st.write(dividends.head())
 
     # Convert index to datetime and ensure they have the same datetime format
     dividends.index = pd.to_datetime(dividends.index)
     hist.index = pd.to_datetime(hist.index)
 
-    # Localize tz-naive datetime objects to UTC timezone
-    tz = pytz.timezone('UTC')
-    dividends.index = dividends.index.tz_localize(tz)
-    hist.index = hist.index.tz_localize(tz)
-
-    results = []
-
+    # Create a new DataFrame 'combined' to store dividend dates, closing prices, and prices -10 and +60 days from dividends
+    combined_data = []
     for div_date, dividend in dividends.items():
+        try:
+            # Get closing price on dividend date
+            price_on_dividend_date = hist.loc[div_date, 'Close']
 
-        first_date = hist.index[0]
-        start_date = max(first_date, div_date - timedelta(days=10))
+            # Calculate dates -10 and +60 days from the dividend date
+            prev_date = div_date - timedelta(days=10)
+            next_date = div_date + timedelta(days=60)
 
-        # Convert datetime to date
-        div_date = div_date.date()
-        start_date = start_date.date()
+            # Check if the -10 and +60 days dates are business days and get their closing prices
+            prev_price = hist.loc[prev_date, 'Close'] if prev_date in hist.index else 'Not a Business Day'
+            next_price = hist.loc[next_date, 'Close'] if next_date in hist.index else 'Not a Business Day'
 
-        # Make the start_date tz-aware
-        start_date = tz.localize(datetime.combine(start_date, datetime.min.time()))
-
-        # Make the div_date tz-aware using the same timezone as dividends DataFrame
-        div_date = tz.localize(datetime.combine(div_date, datetime.min.time()))
-
-        # Check if div_date exists in hist DataFrame before accessing it
-        if div_date not in hist.index:
+            combined_data.append({
+                'Dividend Date': div_date,
+                'Dividend Amount': dividend,
+                'Price on Dividend Date': price_on_dividend_date,
+                '-10 Days Date': prev_date,
+                'Price -10 Days': prev_price,
+                '+60 Days Date': next_date,
+                'Price +60 Days': next_price
+            })
+        except KeyError:
             continue
 
-        price_on_dividend_date = hist.loc[div_date, 'Open']
+    combined = pd.DataFrame(combined_data)
 
-        targets = {
-            '50%': price_on_dividend_date + dividend * 0.5,
-            '75%': price_on_dividend_date + dividend * 0.75,
-            '100%': price_on_dividend_date + dividend * 1.0
-        }
-
-        target_dates = {key: None for key in targets.keys()}
-
-        window_data = hist.loc[start_date:div_date + timedelta(days=90)]
-
-        for date, row in window_data.iterrows():
-            for key, target in targets.items():
-                if row['Open'] >= target and target_dates[key] is None:
-                    target_dates[key] = date
-
-        result_row = {
-            'Dividend Date': div_date.isoformat(),
-            'Opening Date': start_date.isoformat(),
-            'Price on Dividend Date': price_on_dividend_date,
-            '50% Target': targets['50%'],
-            '75% Target': targets['75%'],
-            '100% Target': targets['100%'],
-            '50% Achieved': target_dates['50%'].isoformat() if target_dates['50%'] else None,
-            '75% Achieved': target_dates['75%'].isoformat() if target_dates['75%'] else None,
-            '100% Achieved': target_dates['100%'].isoformat() if target_dates['100%'] else None,
-        }
-
-        results.append(result_row)
-
-    results_df = pd.DataFrame(results)
-
-    st.dataframe(results_df)
+    # Display the combined DataFrame
+    print("Combined Data:")
+    print(combined)
 
 def main():
-    stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
-    years_history = st.sidebar.slider('Select number of years for history:', min_value=10, max_value=20, value=10)
-    proceed_button = st.sidebar.button('Execute')
+    stock_symbol = 'AAPL'
+    years_history = 10
 
     # Check if dividends are increasing over the past 10 years
     stock = yf.Ticker(stock_symbol)
     dividends = stock.dividends
     proceed = dividends.is_monotonic_increasing
 
-    if proceed_button:
-        calculate(stock_symbol, proceed, years_history)
+    calculate(stock_symbol, proceed, years_history)
 
 if __name__ == "__main__":
     main()
