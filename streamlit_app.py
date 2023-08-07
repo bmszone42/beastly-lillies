@@ -55,8 +55,9 @@ def calculate(stock_symbol, years_history):
             except KeyError:
                 continue
 
-    # Create the dividend_dates DataFrame
+    # Create the dividend_dates DataFrame and sort it by 'Dividend Date' in descending order
     dividend_dates = pd.DataFrame(dividend_dates_data)
+    dividend_dates.sort_values(by='Dividend Date', ascending=False, inplace=True)
 
     # Display the title and the dividend_dates DataFrame with rounded values
     st.write("# Dividend Calculation Data")
