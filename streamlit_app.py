@@ -27,6 +27,7 @@ def calculate(stock_symbol, years_history):
                 if prev_date in hist.index and next_date in hist.index:
                     dividend_dates_data.append({
                         'Dividend Date': date.strftime('%Y-%m-%d'),
+                        'Dividend Amount': dividend,
                         'Price on Dividend Date': hist.loc[date, 'Close'],
                         '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
                         'Price -10 Days': hist.loc[prev_date, 'Close'],
