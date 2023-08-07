@@ -64,6 +64,25 @@ def calculate(stock_symbol, years_history):
     st.write(dividend_dates.round({'Dividend Amount': 2, 'Price on Dividend Date': 2,
                                    'Opening Price -10 Days': 2, 'Opening Price +60 Days': 2, 'Target': 2}))
 
+    # Calculate average days for each 10-year period with dividends in the same month
+    avg_days_data = []
+    for month in dividend_dates['Month'].unique():
+        df_month = dividend_dates[dividend_dates['Month'] == month]
+        for i in range(0, len(df_month), 10):
+            df_period = df_month.iloc[i:i + 10]
+            avg_days = df_period['Days to Opening Price > Target'].mean()
+            avg_days_data.append({
+                'Month': month,
+                'Average Days to Opening Price > Target': avg_days
+            })
+
+    # Create the average_days DataFrame
+    average_days = pd.DataFrame(avg_days_data)
+
+    # Display the average_days DataFrame
+    st.write("# Average Days to Opening Price > Target for Each 10-Year Period")
+    st.write(average_days)
+
 def main():
     stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
     years_history = st.sidebar.slider('Select number of years for history:', min_value=1, max_value=20, value=10)
