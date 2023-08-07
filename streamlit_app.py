@@ -25,14 +25,21 @@ def calculate(stock_symbol, years_history):
 
                 # Check if the -10 and +60 days dates are business days and add them to the DataFrame
                 if prev_date in hist.index and next_date in hist.index:
+                    prev_price = hist.loc[prev_date, 'Close']
+                    next_price = hist.loc[next_date, 'Close']
+
+                    # Calculate percentage increase
+                    percentage_increase = ((next_price - prev_price) / prev_price) * 100
+
                     dividend_dates_data.append({
                         'Dividend Date': date.strftime('%Y-%m-%d'),
                         'Dividend Amount': dividend,
                         'Price on Dividend Date': hist.loc[date, 'Close'],
                         '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
-                        'Price -10 Days': hist.loc[prev_date, 'Close'],
+                        'Price -10 Days': prev_price,
                         '+60 Days Date': next_date.strftime('%Y-%m-%d'),
-                        'Price +60 Days': hist.loc[next_date, 'Close']
+                        'Price +60 Days': next_price,
+                        '% Increase': percentage_increase
                     })
             except KeyError:
                 continue
@@ -41,7 +48,7 @@ def calculate(stock_symbol, years_history):
     dividend_dates = pd.DataFrame(dividend_dates_data)
 
     # Display the dividend_dates DataFrame
-    st.write("Dividend Dates with Prices -10 and +60 Days:")
+    st.write("Dividend Dates with Prices -10 and +60 Days and % Increase:")
     st.write(dividend_dates)
 
 def main():
