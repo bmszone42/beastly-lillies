@@ -14,7 +14,7 @@ def calculate(stock_symbol, years_history):
     # Convert index to datetime and ensure they have the same datetime format
     hist.index = pd.to_datetime(hist.index)
 
-    # Create a new DataFrame 'dividend_dates' to store dividend dates, -10 days dates, +60 days dates, and targets
+    # Create a new DataFrame 'dividend_dates' to store dividend dates, -10 days dates, and +60 days dates
     dividend_dates_data = []
     for date, dividend in zip(hist.index, hist['Dividends']):
         if dividend > 0:
@@ -34,10 +34,6 @@ def calculate(stock_symbol, years_history):
                     # Calculate the target (dividend + opening price on -10 days)
                     target = dividend + prev_price
 
-                    # Calculate the number of days for the closing price to be 50% above the target
-                    target_50_percent = target * 1.5
-                    days_to_50_percent = ((hist.loc[next_date:, 'Close'] >= target_50_percent).idxmax() - next_date).days
-
                     dividend_dates_data.append({
                         'Dividend Date': date.strftime('%Y-%m-%d'),
                         'Dividend Amount': dividend,
@@ -48,9 +44,7 @@ def calculate(stock_symbol, years_history):
                         'Opening Price +60 Days': next_price,
                         '% Increase': round(percentage_increase, 1),
                         'Target': target,
-                        'Date Used for Target': prev_date.strftime('%Y-%m-%d'),
-                        'Days to 50% Above Target': days_to_50_percent,
-                        'Target Price at 50%': target_50_percent
+                        'Date Used for Target': prev_date.strftime('%Y-%m-%d')
                     })
             except KeyError:
                 continue
@@ -63,8 +57,7 @@ def calculate(stock_symbol, years_history):
     st.write("# Dividend Calculation Data")
     st.write("Dividend Dates with Prices -10 and +60 Days, Targets, and % Increase:")
     st.write(dividend_dates.round({'Dividend Amount': 2, 'Price on Dividend Date': 2,
-                                   'Opening Price -10 Days': 2, 'Opening Price +60 Days': 2, 'Target': 2,
-                                   'Target Price at 50%': 2}))
+                                   'Opening Price -10 Days': 2, 'Opening Price +60 Days': 2, 'Target': 2}))
 
 def main():
     stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
