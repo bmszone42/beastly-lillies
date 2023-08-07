@@ -14,24 +14,34 @@ def calculate(stock_symbol, years_history):
     # Convert index to datetime and ensure they have the same datetime format
     hist.index = pd.to_datetime(hist.index)
 
-    st.write("Dates with Closing Prices:")
-    for date in hist.index:
-        try:
-            # Get closing price on the date
-            price_on_date = hist.loc[date, 'Close']
+    # Create a new DataFrame 'dividend_dates' to store dividend dates, -10 days dates, and +60 days dates
+    dividend_dates_data = []
+    for date, dividend in zip(hist.index, hist['Dividends']):
+        if dividend > 0:
+            try:
+                # Calculate dates -10 and +60 days from the dividend date
+                prev_date = date - timedelta(days=10)
+                next_date = date + timedelta(days=60)
 
-            # Calculate dates -10 and +60 days from the date
-            prev_date = date - timedelta(days=10)
-            next_date = date + timedelta(days=60)
+                # Check if the -10 and +60 days dates are business days and add them to the DataFrame
+                if prev_date in hist.index and next_date in hist.index:
+                    dividend_dates_data.append({
+                        'Dividend Date': date,
+                        'Price on Dividend Date': hist.loc[date, 'Close'],
+                        '-10 Days Date': prev_date,
+                        'Price -10 Days': hist.loc[prev_date, 'Close'],
+                        '+60 Days Date': next_date,
+                        'Price +60 Days': hist.loc[next_date, 'Close']
+                    })
+            except KeyError:
+                continue
 
-            # Check if the -10 and +60 days dates are business days and get their closing prices
-            prev_price = hist.loc[prev_date, 'Close'] if prev_date in hist.index else 'Not a Business Day'
-            next_price = hist.loc[next_date, 'Close'] if next_date in hist.index else 'Not a Business Day'
+    # Create the dividend_dates DataFrame
+    dividend_dates = pd.DataFrame(dividend_dates_data)
 
-            st.write(f"Date: {date}, Closing Price: {price_on_date}, -10 Days Date: {prev_date}, "
-                     f"Price -10 Days: {prev_price}, +60 Days Date: {next_date}, Price +60 Days: {next_price}")
-        except KeyError:
-            continue
+    # Display the dividend_dates DataFrame
+    st.write("Dividend Dates with Prices -10 and +60 Days:")
+    st.write(dividend_dates)
 
 def main():
     stock_symbol = 'AAPL'
