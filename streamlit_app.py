@@ -33,13 +33,13 @@ def calculate(stock_symbol, years_history):
 
                     dividend_dates_data.append({
                         'Dividend Date': date.strftime('%Y-%m-%d'),
-                        'Dividend Amount ($)': dividend,
-                        'Dividend Date Price': hist.loc[date, 'Close'],
+                        'Dividend Amount': dividend,
+                        'Price on Dividend Date': hist.loc[date, 'Close'],
                         '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
-                        'Price -10 Days ($)': prev_price,
+                        'Price -10 Days': prev_price,
                         '+60 Days Date': next_date.strftime('%Y-%m-%d'),
-                        'Price +60 Days ($)': next_price,
-                        '% Increase over 70 Days': percentage_increase
+                        'Price +60 Days': next_price,
+                        '% Increase': round(percentage_increase, 1)
                     })
             except KeyError:
                 continue
@@ -47,9 +47,10 @@ def calculate(stock_symbol, years_history):
     # Create the dividend_dates DataFrame
     dividend_dates = pd.DataFrame(dividend_dates_data)
 
-    # Display the dividend_dates DataFrame
+    # Display the dividend_dates DataFrame with rounded values
     st.write("Dividend Dates with Prices -10 and +60 Days and % Increase:")
-    st.write(dividend_dates)
+    st.write(dividend_dates.round({'Dividend Amount': 2, 'Price on Dividend Date': 2,
+                                   'Price -10 Days': 2, 'Price +60 Days': 2}))
 
 def main():
     stock_symbol = 'AAPL'
