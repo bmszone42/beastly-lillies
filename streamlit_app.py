@@ -9,7 +9,7 @@ def calculate(stock_symbol, years_history):
 
     hist = stock.history(period=f'{years_history}y')
     st.write('History data')
-    st.write(hist.head())
+    st.write(hist)
 
     # Convert index to datetime and ensure they have the same datetime format
     hist.index = pd.to_datetime(hist.index)
