@@ -33,13 +33,13 @@ def calculate(stock_symbol, years_history):
 
                     dividend_dates_data.append({
                         'Dividend Date': date.strftime('%Y-%m-%d'),
-                        'Dividend Amount': dividend,
-                        'Price on Dividend Date': hist.loc[date, 'Close'],
+                        'Dividend Amount ($)': dividend,
+                        'Dividend Date Price': hist.loc[date, 'Close'],
                         '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
-                        'Price -10 Days': prev_price,
+                        'Price -10 Days ($)': prev_price,
                         '+60 Days Date': next_date.strftime('%Y-%m-%d'),
-                        'Price +60 Days': next_price,
-                        '% Increase': percentage_increase
+                        'Price +60 Days ($)': next_price,
+                        '% Increase over 70 Days': percentage_increase
                     })
             except KeyError:
                 continue
