@@ -48,7 +48,6 @@ def get_symbol_data(symbol, date, years):
           days_to_target = ((hist.loc[next_date:, 'Open'] >= target).idxmax() - next_date).days
 
           dividend_dates.append({
-              'Symbol': symbol,
               'Dividend Date': i.strftime('%Y-%m-%d'),
               'Month': i.month,
               'Dividend Amount': dividend,
@@ -76,6 +75,9 @@ def calculate_avg_days(symbols, date, years):
   for symbol in symbols:  
     data.append(get_symbol_data(symbol, date, years))
 
+  st.write(f'Data info for {symbols}')
+  st.write(data)
+  
   dividend_dates = pd.concat(data)
 
   st.write(f'Dividend info for {symbols}')
