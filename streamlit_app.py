@@ -107,10 +107,7 @@ def main():
   symbols = symbols.split(',')  
   years = 10
 
-  st.write(f'History for {symbols}')
-  st.write(hist)
-  
-  st.write('Dividend Dates')
+  st.write(f'Dividend info for {symbols}')
   st.write(dividend_dates)
   
   if st.button('Calculate'):
