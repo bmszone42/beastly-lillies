@@ -107,7 +107,7 @@ def main():
   symbols = symbols.split(',')  
   years = 10
 
-  st.write(f'History for {symbol}')
+  st.write(f'History for {symbols}')
   st.write(hist)
   
   st.write('Dividend Dates')
