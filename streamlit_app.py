@@ -9,8 +9,13 @@ def get_symbol_data(symbol, date, years):
 
   hist = stock.history(period=f'{years}y')
 
-   # Check if index is tz-aware
-  if hist.index.is_tz_aware:
+  try:
+    hist.index.tz 
+  except AttributeError:
+    # Index is tz-naive
+    pass  
+  else:
+    # Index is tz-aware
     date = pd.to_datetime(date).tz_localize(hist.index.tz)
   
   # Filter to dividend dates before given date
