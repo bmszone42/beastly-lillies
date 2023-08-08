@@ -48,6 +48,7 @@ def get_symbol_data(symbol, date, years):
           days_to_target = ((hist.loc[next_date:, 'Open'] >= target).idxmax() - next_date).days
 
           dividend_dates.append({
+              'Symbol': symbol,
               'Dividend Date': i.strftime('%Y-%m-%d'),
               'Month': i.month,
               'Dividend Amount': dividend,
