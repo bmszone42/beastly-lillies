@@ -8,6 +8,9 @@ def get_symbol_data(symbol, date, years):
   stock = yf.Ticker(symbol)
 
   hist = stock.history(period=f'{years}y')
+
+  # Localize the date input to the dataframe timezone
+  date = date.tz_localize(hist.index.tz)
   
   # Filter to dividend dates before given date
   hist = hist[:date]
