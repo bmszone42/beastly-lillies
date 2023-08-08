@@ -74,11 +74,6 @@ def calculate_avg_days(symbols, date, years):
   avg_days = [] # Clear out old data
   data = []
 
-  date = st.date_input('Enter dividend date')
-  symbols = st.text_input('Enter symbols separated by comma')
-  symbols = symbols.split(',')  
-  years = 10
-
   for symbol in symbols:
     symbol_data = get_symbol_data(symbol, date, years)
     data.append(symbol_data)
@@ -105,7 +100,11 @@ def calculate_avg_days(symbols, date, years):
 
 
 def main():
-
+  date = st.date_input('Enter dividend date')
+  symbols = st.text_input('Enter symbols separated by comma')
+  symbols = symbols.split(',')  
+  years = 10
+  
   if st.button('Calculate'):
     calculate_avg_days(symbols, date, years)
 
