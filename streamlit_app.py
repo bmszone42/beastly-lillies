@@ -9,6 +9,9 @@ def get_symbol_data(symbol, date, years):
 
   hist = stock.history(period=f'{years}y')
 
+  # Convert date to datetime
+  date = pd.to_datetime(date)
+
   # Localize the date input to the dataframe timezone
   date = date.tz_localize(hist.index.tz)
   
