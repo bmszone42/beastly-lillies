@@ -84,6 +84,8 @@ def calculate_avg_days(symbols, date, years):
   # Convert 'Dividend Date' column to datetime type explicitly
   dividend_dates['Dividend Date'] = pd.to_datetime(dividend_dates['Dividend Date'])
 
+  if not dividend_dates.empty: 
+    dividend_dates['Dividend Date'] = pd.to_datetime(dividend_dates['Dividend Date'])
 
   st.write(f'Dividend info for {symbols}')
   st.write(dividend_dates)
