@@ -13,6 +13,7 @@ def get_symbol_data(symbol, date, years):
   if 'Dividends' not in hist.columns:
     return pd.DataFrame() # return empty DataFrame
 
+
   try:
     hist.index.tz 
   except AttributeError:
@@ -48,7 +49,6 @@ def get_symbol_data(symbol, date, years):
           days_to_target = ((hist.loc[next_date:, 'Open'] >= target).idxmax() - next_date).days
 
           dividend_dates.append({
-              'Symbol': symbol,
               'Dividend Date': i.strftime('%Y-%m-%d'),
               'Month': i.month,
               'Dividend Amount': dividend,
@@ -70,46 +70,32 @@ def get_symbol_data(symbol, date, years):
 
 
 def calculate_avg_days(symbols, date, years):
-
+  
+  avg_days = [] # Clear out old data
   data = []
 
-  for symbol in symbols:  
-    data.append(get_symbol_data(symbol, date, years))
+  for symbol in symbols:
+    symbol_data = get_symbol_data(symbol, date, years)
+    data.append(symbol_data)
 
-  st.write(f'Data info for {symbols}')
-  st.write(data)
-
-  dividend_dates = pd.concat(data, ignore_index=True)
-  #dividend_dates = pd.concat(data)
-  # Convert 'Dividend Date' column to datetime type explicitly
-  dividend_dates['Dividend Date'] = pd.to_datetime(dividend_dates['Dividend Date'])
-
-  if not dividend_dates.empty: 
-    dividend_dates['Dividend Date'] = pd.to_datetime(dividend_dates['Dividend Date'])
-
-  st.write(f'Dividend info for {symbols}')
-  st.write(dividend_dates)
-
-  # Extract month from date 
+  dividend_dates = pd.concat(data)
   dividend_dates['Month'] = dividend_dates['Dividend Date'].dt.month
-
-  # Group by month 
-  grouped = dividend_dates.groupby('Month')
 
   avg_days = []
 
-  # Iterate through groups
-  for month, group in grouped:
+  for month in dividend_dates['Month'].unique():
+    df_month = dividend_dates[dividend_dates['Month'] == month]
 
-    # Get 10 year periods 
-    periods = [group[i:i+10] for i in range(0, len(group), 10)]
+    for i in range(0, len(df_month), 10):
+      df_period = df_month.iloc[i:i+10]
+      mean_days = df_period['Days to Opening Price > Target'].mean()
+      avg_days.append({
+        'Symbol': symbol,
+        'Month': month, 
+        'Average Days': round(mean_days)  
+      })
 
-    # Calculate average for each period
-    for period in periods:
-      avg = period['Days to Opening Price > Target'].mean()
-      avg_days.append({'Symbol': symbol, 'Month': month, 'Avg Days': avg})
-
-  avg_days_df = pd.DataFrame(avg_days)
+  avg_days_df = pd.DataFrame(avg_days, columns=['Symbol', 'Month', 'Average Days'])
   
   st.write(avg_days_df)
 
@@ -122,12 +108,6 @@ def main():
   
   if st.button('Calculate'):
     calculate_avg_days(symbols, date, years)
-
-    st.write(f'Average Days for {symbols}')
-    st.write(avg_days_df)
-
-    st.write(f'Dividend info for {symbols}')
-    st.write(dividend_dates)
 
 if __name__ == '__main__':
   main()
