@@ -88,12 +88,13 @@ def calculate_avg_days(symbols, date, years):
       df_period = df_month.iloc[i:i+10]
       mean_days = df_period['Days to Opening Price > Target'].mean()
       avg_days.append({
+        'Symbol': symbol,
         'Month': month, 
         'Average Days': round(mean_days)  
       })
 
-  avg_days_df = pd.DataFrame(avg_days)
-
+  avg_days_df = pd.DataFrame(avg_days, columns=['Symbol', 'Month', 'Average Days'])
+  
   st.write(avg_days_df)
 
 
