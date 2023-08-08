@@ -9,6 +9,11 @@ def get_symbol_data(symbol, date, years):
 
   hist = stock.history(period=f'{years}y')
 
+  # Check if 'Dividends' column exists
+  if 'Dividends' not in hist.columns:
+    return pd.DataFrame() # return empty DataFrame
+
+
   try:
     hist.index.tz 
   except AttributeError:
