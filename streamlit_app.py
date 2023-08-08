@@ -13,7 +13,6 @@ def get_symbol_data(symbol, date, years):
   if 'Dividends' not in hist.columns:
     return pd.DataFrame() # return empty DataFrame
 
-
   try:
     hist.index.tz 
   except AttributeError:
@@ -107,6 +106,12 @@ def main():
   symbols = st.text_input('Enter symbols separated by comma')
   symbols = symbols.split(',')  
   years = 10
+
+  st.write(f'History for {symbol}')
+  st.write(hist)
+  
+  st.write('Dividend Dates')
+  st.write(dividend_dates)
   
   if st.button('Calculate'):
     calculate_avg_days(symbols, date, years)
