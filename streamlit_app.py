@@ -106,12 +106,12 @@ def main():
   symbols = st.text_input('Enter symbols separated by comma')
   symbols = symbols.split(',')  
   years = 10
-
-  st.write(f'Dividend info for {symbols}')
-  st.write(dividend_dates)
   
   if st.button('Calculate'):
     calculate_avg_days(symbols, date, years)
+
+    st.write(f'Dividend info for {symbols}')
+    st.write(dividend_dates)
 
 if __name__ == '__main__':
   main()
