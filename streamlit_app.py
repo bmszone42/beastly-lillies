@@ -78,7 +78,7 @@ def calculate_avg_days(symbols, date, years):
     symbol_data = get_symbol_data(symbol, date, years)
     data.append(symbol_data)
 
-  #dividend_dates = pd.concat(data)
+  dividend_dates = pd.concat(data)
   dividend_dates['Month'] = dividend_dates['Dividend Date'].dt.month
 
   avg_days = []
