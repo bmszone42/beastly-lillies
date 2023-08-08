@@ -109,6 +109,7 @@ def calculate_avg_days(symbols, date, years):
   avg_days_df = pd.DataFrame(avg_days)
   
   st.write(avg_days_df)
+  return dividend_dates, avg_days_df
 
 
 def main():
@@ -119,6 +120,9 @@ def main():
   
   if st.button('Calculate'):
     calculate_avg_days(symbols, date, years)
+
+    st.write(f'Average Days for {symbols}')
+    st.write(avg_days_df)
 
     st.write(f'Dividend info for {symbols}')
     st.write(dividend_dates)
