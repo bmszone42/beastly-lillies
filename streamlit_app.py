@@ -103,6 +103,7 @@ def main():
 
     years = 10
     valid_symbols = []
+    symbols = ''  # Initialize the symbols variable
 
     col1, col2 = st.columns(2)
     with col1:
