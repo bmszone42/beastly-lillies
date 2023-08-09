@@ -84,7 +84,8 @@ def calculate_avg_days(symbols, years):
             avg_days.append({'Symbol': group['Symbol'].iloc[0], 'Month': month, 'Avg Days': avg})
 
 
-    avg_days_df = pd.DataFrame(avg_days)
+    #avg_days_df = pd.DataFrame(avg_days)
+    avg_days_df = pd.DataFrame(avg_days).sort_values(by=['Symbol'])
 
     return dividend_dates, avg_days_df
 
