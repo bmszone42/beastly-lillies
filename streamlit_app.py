@@ -7,6 +7,11 @@ def is_ex_dividend_today(symbol):
     try:
         stock = yf.Ticker(symbol)
         dividends = stock.dividends
+
+        # Display the dividends data as a table in Streamlit
+        st.write(f"Dividend data for {symbol}:")
+        st.write(dividends.to_frame())
+        
         today = pd.Timestamp.today().date()
         
         # Check if today is in the dividend dates
