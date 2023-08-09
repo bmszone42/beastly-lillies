@@ -135,10 +135,11 @@ def main():
                     
                     st.subheader('Summarized Results')
                     
-                    # Group summarized_results by Symbol and display for each symbol
-                    for symbol, group in summarized_results.groupby('Symbol'):
+                    # Display summarized results for each symbol
+                    for symbol in valid_symbols:
+                        symbol_data = summarized_results[summarized_results['Symbol'] == symbol]
                         st.write(f"Symbol: {symbol}")
-                        st.write(group)
+                        st.write(symbol_data)
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
