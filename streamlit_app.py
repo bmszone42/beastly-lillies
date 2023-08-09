@@ -3,14 +3,16 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 
-# Function to check if a stock is ex-dividend today
 def is_ex_dividend_today(symbol):
     try:
         stock = yf.Ticker(symbol)
         dividends = stock.dividends
         today = pd.Timestamp.today().date()
+        print(f"Today's date: {today}")
+        print(f"Dividend dates for {symbol}: {dividends.index.tolist()}")
         return today in dividends.index
-    except Exception:
+    except Exception as e:
+        print(f"Error fetching dividend data for {symbol}: {e}")
         return False
 
 # Function to get detailed dividend data for a symbol
