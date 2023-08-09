@@ -8,12 +8,21 @@ def is_ex_dividend_today(symbol):
         stock = yf.Ticker(symbol)
         dividends = stock.dividends
         today = pd.Timestamp.today().date()
-        print(f"Today's date: {today}")
-        print(f"Dividend dates for {symbol}: {dividends.index.tolist()}")
-        return today in dividends.index
+        
+        # Check if today is in the dividend dates
+        if today in dividends.index:
+            return True, "Today is an ex-dividend date."
+        
+        # Find the next dividend date after today
+        next_dividend_date = dividends.index[dividends.index > today].min()
+        
+        # Check if a next dividend date is found
+        if pd.notna(next_dividend_date):
+            return False, f"The next ex-dividend date is {next_dividend_date.strftime('%Y-%m-%d')}."
+        else:
+            return False, "No upcoming ex-dividend date found."
     except Exception as e:
-        print(f"Error fetching dividend data for {symbol}: {e}")
-        return False
+        return False, f"Error fetching dividend data for {symbol}: {e}"
 
 # Function to get detailed dividend data for a symbol
 def get_symbol_data(symbol, years):
