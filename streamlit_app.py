@@ -113,45 +113,46 @@ def main():
 
     show_detailed_results = st.checkbox('Show Detailed Results', value=True)
 
-    if st.button('Calculate'):
-        symbols = symbols.split(',')
-        for symbol in symbols:
-            symbol = symbol.strip().upper()
-            if yf.Ticker(symbol).info:
-                valid_symbols.append(symbol)
-            else:
-                st.error(f"Invalid stock symbol: {symbol}")
-
-        if valid_symbols:
-            try:
-                dividend_dates, avg_days_df = calculate_avg_days(valid_symbols, years)
-                if show_detailed_results:
-                    st.subheader(f'Dividend info for {valid_symbols}')
-                    st.write(dividend_dates)
-
-                    st.subheader(f'Average Days for {valid_symbols}')
-                    st.write(avg_days_df)
-                else:
-                    summarized_results = avg_days_df.copy()
-
-                st.subheader('Summarized Results')
-                
-                # Display summarized results for each symbol
-                for symbol in valid_symbols:
-                    symbol_data = summarized_results[summarized_results['Symbol'] == symbol]
-                    if not symbol_data.empty:
-                        latest_data = symbol_data[symbol_data['Avg Days'] == symbol_data['Avg Days'].min()]
-                        st.write(f"Symbol: {symbol}")
-                        st.write(f"Closest Calculation Date: {latest_data.iloc[0]['Month'].strftime('%B %Y')}")
-                        st.write(f"Average Days: {latest_data.iloc[0]['Avg Days']:.2f} days")
-                        st.write("\n")
-
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-
-            display_sidebar(valid_symbols)
+if st.button('Calculate'):
+    symbols = symbols.split(',')
+    for symbol in symbols:
+        symbol = symbol.strip().upper()
+        if yf.Ticker(symbol).info:
+            valid_symbols.append(symbol)
         else:
-            st.error("No valid stock symbols provided.")
+            st.error(f"Invalid stock symbol: {symbol}")
+
+    if valid_symbols:
+        try:
+            dividend_dates, avg_days_df = calculate_avg_days(valid_symbols, years)
+            if show_detailed_results:
+                st.subheader(f'Dividend info for {valid_symbols}')
+                st.write(dividend_dates)
+
+                st.subheader(f'Average Days for {valid_symbols}')
+                st.write(avg_days_df)
+            else:
+                if avg_days_df.shape[0] > 0:
+                    st.subheader('Summarized Results')
+
+                    # Display summarized results for each symbol
+                    for symbol in valid_symbols:
+                        symbol_data = avg_days_df[avg_days_df['Symbol'] == symbol]
+                        if not symbol_data.empty:
+                            latest_data = symbol_data[symbol_data['Avg Days'] == symbol_data['Avg Days'].min()]
+                            st.write(f"Symbol: {symbol}")
+                            st.write(f"Closest Calculation Date: {latest_data.iloc[0]['Month'].strftime('%B %Y')}")
+                            st.write(f"Average Days: {latest_data.iloc[0]['Avg Days']:.2f} days")
+                            st.write("\n")
+                else:
+                    st.write("No valid stock symbols provided.")
+
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+
+        display_sidebar(valid_symbols)
+    else:
+        st.error("No valid stock symbols provided.")
 
 if __name__ == '__main__':
     main()
