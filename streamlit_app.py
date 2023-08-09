@@ -132,8 +132,13 @@ def main():
                 else:
                     summarized_results = dividend_dates[['Symbol', 'Ex-Dividend Date', 'Days to Opening Price > Target']].copy()
                     summarized_results = summarized_results.drop_duplicates(subset=['Symbol', 'Ex-Dividend Date'])
+                    
                     st.subheader('Summarized Results')
-                    st.write(summarized_results)
+                    
+                    # Group summarized_results by Symbol and display for each symbol
+                    for symbol, group in summarized_results.groupby('Symbol'):
+                        st.write(f"Symbol: {symbol}")
+                        st.write(group)
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
