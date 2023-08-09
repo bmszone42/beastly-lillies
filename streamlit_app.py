@@ -41,7 +41,7 @@ def get_symbol_data(symbol, years):
                     dividend_dates.append({
                         'Symbol': symbol,
                         'Dividend Date': i.strftime('%Y-%m-%d'),
-                        'Ex-Dividend Date': stock.dividends[stock.dividends.index <= i][-1].strftime('%Y-%m-%d'),
+                        'Ex-Dividend Date': stock.dividends.index[stock.dividends.index <= i][-1].strftime('%Y-%m-%d')
                         'Month': i.month,
                         'Dividend Amount': dividend,
                         'Price on Dividend Date': hist.loc[i, 'Close'],
