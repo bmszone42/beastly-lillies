@@ -100,7 +100,7 @@ def calculate_avg_days(symbols, years):
 def display_sidebar(valid_symbols):
     st.sidebar.markdown("## Ex-Dividend Today")
     for symbol in valid_symbols:
-        ex_dividend_today = is_ex_dividend_today(symbol)
+        ex_dividend_today, message = is_ex_dividend_today(symbol)
         st.sidebar.write(f'{symbol}: {message}')
 
 def main():
