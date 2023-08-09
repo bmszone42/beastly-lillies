@@ -34,6 +34,10 @@ def get_symbol_data(symbol, years):
     stock = yf.Ticker(symbol)
     hist = stock.history(period=f'{years}y')
 
+     # Display the dividends data as a table in Streamlit
+    st.write(f"History data for {symbol}:")
+    st.write(hist.to_frame())
+
     if 'Dividends' not in hist.columns:
         return pd.DataFrame()
 
