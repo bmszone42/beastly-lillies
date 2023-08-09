@@ -130,16 +130,19 @@ def main():
                     st.subheader(f'Average Days for {valid_symbols}')
                     st.write(avg_days_df)
                 else:
-                    summarized_results = dividend_dates[['Symbol', 'Ex-Dividend Date', 'Days to Opening Price > Target']].copy()
-                    summarized_results = summarized_results.drop_duplicates(subset=['Symbol', 'Ex-Dividend Date'])
-                    
-                    st.subheader('Summarized Results')
-                    
-                    # Display summarized results for each symbol
-                    for symbol in valid_symbols:
-                        symbol_data = summarized_results[summarized_results['Symbol'] == symbol]
+                    summarized_results = avg_days_df.copy()
+
+                st.subheader('Summarized Results')
+                
+                # Display summarized results for each symbol
+                for symbol in valid_symbols:
+                    symbol_data = summarized_results[summarized_results['Symbol'] == symbol]
+                    if not symbol_data.empty:
+                        latest_data = symbol_data[symbol_data['Avg Days'] == symbol_data['Avg Days'].min()]
                         st.write(f"Symbol: {symbol}")
-                        st.write(symbol_data)
+                        st.write(f"Closest Calculation Date: {latest_data.iloc[0]['Month'].strftime('%B %Y')}")
+                        st.write(f"Average Days: {latest_data.iloc[0]['Avg Days']:.2f} days")
+                        st.write("\n")
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
