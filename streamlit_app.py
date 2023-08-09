@@ -3,45 +3,48 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 
-def calculate(stock_symbol, years_history):
+# Function to check if a stock is ex-dividend today
+def is_ex_dividend_today(symbol):
+    try:
+        stock = yf.Ticker(symbol)
+        dividends = stock.dividends
+        today = pd.Timestamp.today().date()
+        return today in dividends.index
+    except Exception:
+        return False
 
-    stock = yf.Ticker(stock_symbol)
+# Function to get detailed dividend data for a symbol
+def get_symbol_data(symbol, years):
+    stock = yf.Ticker(symbol)
+    hist = stock.history(period=f'{years}y')
 
-    hist = stock.history(period=f'{years_history}y')
-    st.write('History data')
-    st.write(hist.head())
+    if 'Dividends' not in hist.columns:
+        return pd.DataFrame()
 
-    # Convert index to datetime and ensure they have the same datetime format
-    hist.index = pd.to_datetime(hist.index)
+    dividend_dates = []
 
-    # Create a new DataFrame 'dividend_dates' to store dividend dates, -10 days dates, and +60 days dates
-    dividend_dates_data = []
-    for date, dividend in zip(hist.index, hist['Dividends']):
+    for i, dividend in hist['Dividends'].items():
         if dividend > 0:
             try:
-                # Calculate dates -10 and +60 days from the dividend date
-                prev_date = date - timedelta(days=10)
-                next_date = date + timedelta(days=60)
+                prev_date = i - timedelta(days=10)
+                next_date = i + timedelta(days=60)
 
-                # Check if the -10 and +60 days dates are business days and add them to the DataFrame
                 if prev_date in hist.index and next_date in hist.index:
                     prev_price = hist.loc[prev_date, 'Open']
                     next_price = hist.loc[next_date, 'Open']
 
-                    # Calculate percentage increase
                     percentage_increase = ((next_price - prev_price) / prev_price) * 100
-
-                    # Calculate the target (dividend + opening price on -10 days)
                     target = dividend + prev_price
 
-                    # Calculate the number of days for the opening price to be greater than the target price
                     days_to_target = ((hist.loc[next_date:, 'Open'] >= target).idxmax() - next_date).days
 
-                    dividend_dates_data.append({
-                        'Dividend Date': date.strftime('%Y-%m-%d'),
-                        'Month': date.month,
+                    dividend_dates.append({
+                        'Symbol': symbol,
+                        'Dividend Date': i.strftime('%Y-%m-%d'),
+                        'Ex-Dividend Date': stock.dividends[stock.dividends.index <= i][-1].strftime('%Y-%m-%d'),
+                        'Month': i.month,
                         'Dividend Amount': dividend,
-                        'Price on Dividend Date': hist.loc[date, 'Close'],
+                        'Price on Dividend Date': hist.loc[i, 'Close'],
                         '-10 Days Date': prev_date.strftime('%Y-%m-%d'),
                         'Opening Price -10 Days': prev_price,
                         '+60 Days Date': next_date.strftime('%Y-%m-%d'),
@@ -51,45 +54,93 @@ def calculate(stock_symbol, years_history):
                         'Date Used for Target': prev_date.strftime('%Y-%m-%d'),
                         'Days to Opening Price > Target': days_to_target
                     })
+
             except KeyError:
                 continue
 
-    # Create the dividend_dates DataFrame and sort it by 'Month' and 'Dividend Date' in descending order
-    dividend_dates = pd.DataFrame(dividend_dates_data)
-    dividend_dates.sort_values(by=['Month', 'Dividend Date'], ascending=[True, False], inplace=True)
+    return pd.DataFrame(dividend_dates)
 
-    # Display the title and the dividend_dates DataFrame with rounded values
-    st.write("# Dividend Calculation Data")
-    st.write("Dividend Dates with Prices -10 and +60 Days, Targets, and % Increase:")
-    st.write(dividend_dates.round({'Dividend Amount': 2, 'Price on Dividend Date': 2,
-                                   'Opening Price -10 Days': 2, 'Opening Price +60 Days': 2, 'Target': 2}))
+# Function to calculate average days
+def calculate_avg_days(symbols, years):
+    data = []
 
-    # Calculate average days for each 10-year period with dividends in the same month
-    avg_days_data = []
-    for month in dividend_dates['Month'].unique():
-        df_month = dividend_dates[dividend_dates['Month'] == month]
-        for i in range(0, len(df_month), 10):
-            df_period = df_month.iloc[i:i + 10]
-            avg_days = df_period['Days to Opening Price > Target'].mean()
-            avg_days_data.append({
-                'Month': month,
-                'Average Days to Opening Price > Target': avg_days
-            })
+    for symbol in symbols:
+        data.append(get_symbol_data(symbol, years))
 
-    # Create the average_days DataFrame
-    average_days = pd.DataFrame(avg_days_data)
+    dividend_dates = pd.concat(data)
 
-    # Display the average_days DataFrame
-    st.write("# Average Days to Opening Price > Target for Each 10-Year Period")
-    st.write(average_days)
+    dividend_dates['Dividend Date'] = pd.to_datetime(dividend_dates['Dividend Date'])
+    dividend_dates['Ex-Dividend Date'] = pd.to_datetime(dividend_dates['Ex-Dividend Date'])
+
+    grouped = dividend_dates.groupby('Month')
+
+    avg_days = []
+
+    for month, group in grouped:
+        periods = [group[i:i+10] for i in range(0, len(group), 10)]
+        for period in periods:
+            avg = period['Days to Opening Price > Target'].mean()
+            avg_days.append({'Symbol': symbol, 'Month': month, 'Avg Days': avg})
+
+    avg_days_df = pd.DataFrame(avg_days)
+
+    return dividend_dates, avg_days_df
+
+def display_sidebar(valid_symbols):
+    st.sidebar.markdown("## Ex-Dividend Today")
+    for symbol in valid_symbols:
+        ex_dividend_today = is_ex_dividend_today(symbol)
+        st.sidebar.write(f'{symbol}: Ex-Dividend Today? {ex_dividend_today}')
 
 def main():
-    stock_symbol = st.sidebar.text_input('Enter stock symbol:', 'AAPL')
-    years_history = st.sidebar.slider('Select number of years for history:', min_value=10, max_value=20, value=10)
-    execute_button = st.sidebar.button('Execute')
+    st.title("Stock Dividend Analysis")
+    st.markdown("## Instructions")
+    st.write("1. Enter stock symbols separated by commas.")
+    st.write("2. Choose a dividend date.")
+    st.write("3. Click the 'Calculate' button to analyze dividend data.")
 
-    if execute_button:
-        calculate(stock_symbol, years_history)
+    years = 10
+    valid_symbols = []
 
-if __name__ == "__main__":
+    col1, col2 = st.columns(2)
+    with col1:
+        symbols = st.text_input('Enter symbols separated by comma')
+    with col2:
+        default_date = pd.Timestamp.today().date()
+        date = st.date_input('Enter dividend date', default_date)
+
+    show_detailed_results = st.checkbox('Show Detailed Results', value=True)
+
+    if st.button('Calculate'):
+        symbols = symbols.split(',')
+        for symbol in symbols:
+            symbol = symbol.strip().upper()
+            if yf.Ticker(symbol).info:
+                valid_symbols.append(symbol)
+            else:
+                st.error(f"Invalid stock symbol: {symbol}")
+
+        if valid_symbols:
+            try:
+                dividend_dates, avg_days_df = calculate_avg_days(valid_symbols, years)
+                if show_detailed_results:
+                    st.subheader(f'Dividend info for {valid_symbols}')
+                    st.write(dividend_dates)
+
+                    st.subheader(f'Average Days for {valid_symbols}')
+                    st.write(avg_days_df)
+                else:
+                    summarized_results = dividend_dates[['Symbol', 'Ex-Dividend Date', 'Days to Opening Price > Target']].copy()
+                    summarized_results = summarized_results.drop_duplicates(subset=['Symbol', 'Ex-Dividend Date'])
+                    st.subheader('Summarized Results')
+                    st.write(summarized_results)
+
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
+
+            display_sidebar(valid_symbols)
+        else:
+            st.error("No valid stock symbols provided.")
+
+if __name__ == '__main__':
     main()
