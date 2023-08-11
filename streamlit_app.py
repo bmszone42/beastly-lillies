@@ -141,11 +141,15 @@ def main():
                     # Add this after the summarized_results dataframe is created
                     summarized_results['Avg Days'] = summarized_results.groupby('Symbol')['Days to Opening Price > Target'].transform('mean')
                     
-                    # Then modify the display loop as follows:
+                    ## Round Avg Days column
+                    summarized_results['Avg Days'] = summarized_results['Avg Days'].round(1)
+                    
+                    # Display results
                     for symbol, group in summarized_results.groupby('Symbol'):
-                        st.write(f"Symbol: {symbol}")
-                        # Show the average days for this symbol
-                        st.write(f"Avg Days: {round(group['Avg Days'].iloc[0], 1)}")
+                        
+                        st.subheader(symbol)
+                        
+                        st.table(group[['Ex-Dividend Date', 'Avg Days', 'Days to Opening Price > Target']])
                         #st.write(group)
             except Exception as e:
                 #st.error(f"An error occurred: {e}")
