@@ -145,7 +145,7 @@ def main():
                     for symbol, group in summarized_results.groupby('Symbol'):
                         st.write(f"Symbol: {symbol}")
                         # Show the average days for this symbol
-                        st.write(f"Avg Days: {group['Avg Days'].iloc[0], 1}")
+                        st.write(f"Avg Days: {round(group['Avg Days'].iloc[0], 1)}")
                         #st.write(group)
             except Exception as e:
                 #st.error(f"An error occurred: {e}")
