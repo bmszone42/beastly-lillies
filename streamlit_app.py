@@ -142,16 +142,18 @@ def main():
                     
                     # Then modify the display loop as follows:
                     for symbol, group in summarized_results.groupby('Symbol'):
-                        st.write(f"Symbol: {symbol}")
+                        #st.write(f"Symbol: {symbol}")
                         # Show the average days for this symbol
                         st.write(f"Avg Days: {group['Avg Days'].iloc[0]}")
                         st.write(group)
             except Exception as e:
-                st.error(f"An error occurred: {e}")
+                #st.error(f"An error occurred: {e}")
+                print(f"An error occurred: {e}")
 
             display_sidebar(valid_symbols)
         else:
-            st.error("No valid stock symbols provided.")
+            #st.error("No valid stock symbols provided.")
+            print("No valid stock symbols provided.")
 
 if __name__ == '__main__':
     main()
