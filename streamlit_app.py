@@ -93,7 +93,8 @@ def display_sidebar(valid_symbols):
     st.sidebar.markdown("## Ex-Dividend Today")
     for symbol in valid_symbols:
         ex_dividend_today = is_ex_dividend_today(symbol)
-        st.sidebar.write(f'{symbol}: Ex-Dividend Today? {ex_dividend_today}')
+        #st.sidebar.write(f'{symbol}: Ex-Dividend Today? {ex_dividend_today}')
+        print(f'{symbol}: Ex-Dividend Today? {ex_dividend_today}')
 
 def main():
     st.title("Stock Dividend Analysis")
@@ -145,7 +146,7 @@ def main():
                         #st.write(f"Symbol: {symbol}")
                         # Show the average days for this symbol
                         st.write(f"Avg Days: {group['Avg Days'].iloc[0]}")
-                        st.write(group)
+                        #st.write(group)
             except Exception as e:
                 #st.error(f"An error occurred: {e}")
                 print(f"An error occurred: {e}")
