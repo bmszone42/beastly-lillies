@@ -143,7 +143,7 @@ def main():
                     
                     # Then modify the display loop as follows:
                     for symbol, group in summarized_results.groupby('Symbol'):
-                        #st.write(f"Symbol: {symbol}")
+                        st.write(f"Symbol: {symbol}")
                         # Show the average days for this symbol
                         st.write(f"Avg Days: {group['Avg Days'].iloc[0]}")
                         #st.write(group)
