@@ -143,10 +143,7 @@ def main():
                     
                     for symbol, group in summarized_results.groupby('Symbol'):
                         st.write(f"Symbol: {symbol}")
-                    
                         st.write(f"Avg Days: {round(group['Avg Days'].iloc[0], 1)}")
-                    
-                        st.write(group)
                         #st.write(group)
             except Exception as e:
                 #st.error(f"An error occurred: {e}")
