@@ -145,10 +145,8 @@ def main():
                     summarized_results['Avg Days'] = summarized_results.groupby('Symbol')['Days to Opening Price > Target'].transform('mean')
                     
                     for symbol, group in summarized_results.groupby('Symbol'):
-                        st.write(f"Symbol: {symbol}")
-                    
+                        st.write(f"<h2 style='color:green;font-size:20px'>{symbol}</h2>", unsafe_allow_html=True)
                         st.write(f"Avg Days: {round(group['Avg Days'].iloc[0], 1)}")
-                    
                         #st.write(group)
             except Exception as e:
                 #st.error(f"An error occurred: {e}")
