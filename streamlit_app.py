@@ -108,7 +108,7 @@ def main():
 
     col1, col2 = st.columns(2)
     with col1:
-        symbols = st.text_input('Enter symbols separated by comma')
+        symbols = st.text_input('Enter symbols separated by comma', value = 'AAPL, ABT, ABBV, ABMD, AVGO, AMD, ADP, ACN, ATVI, ADBE')
     with col2:
         default_date = pd.Timestamp.today().date()
         date = st.date_input('Enter dividend date', default_date)
