@@ -106,7 +106,7 @@ def main():
     years = 10
     valid_symbols = []
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1.5,1])
     with col1:
         symbols = st.text_input('Enter symbols separated by comma', value = 'AAPL, ABBV, ABT, ADP,  ATVI, AVGO')
     with col2:
