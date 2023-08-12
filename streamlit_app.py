@@ -138,18 +138,17 @@ def main():
                     summarized_results = summarized_results.drop_duplicates(subset=['Symbol', 'Ex-Dividend Date'])
                     st.subheader('Summarized Results')
 
-                    # Add this after the summarized_results dataframe is created
+                    # Create summarized results dataframe 
                     summarized_results['Avg Days'] = summarized_results.groupby('Symbol')['Days to Opening Price > Target'].transform('mean')
-
-                    for symbol, group in summarized_results.groupby('Symbol'):
-        
-                        st.subheader(f"{symbol}")
                     
-                        color = 'green' if group['Avg Days'].iloc[0] <= 60 else 'red'
-                        st.write(f"<span style='color:{color}'>Avg Days: {round(group['Avg Days'].iloc[0], 1)}</span>", unsafe_allow_html=True)
+                    # Round Avg Days column
+                    summarized_results['Avg Days'] = summarized_results['Avg Days'].round(1) 
                     
-                        st.table(data=group[['Ex-Dividend Date', 'Days to Opening Price > Target']], columns_name=['**Ex-Dividend Date**','**Days to Target**'], index=False)
-                    # for symbol, group in summarized_results.groupby('Symbol'):
+                    # Display header
+                    st.subheader('Summarized Results')
+                    
+                    # Display data
+                    st.table(data=summarized_results[['Symbol', 'Ex-Dividend Date','Avg Days','Days to Opening Price > Target']], columns_name=['**Symbol**','**Ex-Dividend Date**','**Avg Days**','**Days to Target**'])                    # for symbol, group in summarized_results.groupby('Symbol'):
                     #     st.write(f"Symbol: {symbol}")
                     #     st.write(f"Avg Days: {round(group['Avg Days'].iloc[0], 1)}")
                         #st.write(group)
