@@ -143,12 +143,12 @@ def main():
 
             for symbol, group in summarized_results.groupby('Symbol'):
 
-            st.subheader(f"{symbol}")
-        
-            color = 'green' if group['Avg Days'].iloc[0] <= 30 else 'red'
-            st.write(f"<span style='color:{color}'>Avg Days: {round(group['Avg Days'].iloc[0], 1)}</span>", unsafe_allow_html=True)
-        
-            st.table(data=group[['Ex-Dividend Date', 'Days to Opening Price > Target']], columns_name=['**Ex-Dividend Date**','**Days to Target**'], index=False)
+                st.subheader(f"{symbol}")
+            
+                color = 'green' if group['Avg Days'].iloc[0] <= 30 else 'red'
+                st.write(f"<span style='color:{color}'>Avg Days: {round(group['Avg Days'].iloc[0], 1)}</span>", unsafe_allow_html=True)
+            
+                st.table(data=group[['Ex-Dividend Date', 'Days to Opening Price > Target']], columns_name=['**Ex-Dividend Date**','**Days to Target**'], index=False)
                     # for symbol, group in summarized_results.groupby('Symbol'):
                     #     st.write(f"Symbol: {symbol}")
                     #     st.write(f"Avg Days: {round(group['Avg Days'].iloc[0], 1)}")
